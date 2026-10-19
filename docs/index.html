@@ -4,9 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fleet maintenance hours</title>
+<script>try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
 :root{--bg:#f7f6f3;--card:#fff;--text:#1f1f1d;--muted:#6b6a66;--line:#e2e0da;--red:#d93a3a;--redbg:#fcebeb;--redtx:#8f1f1f;--amb:#e59a1b;--ambbg:#faeeda;--ambtx:#6b4306;--grn:#3f9a4a;--grnbg:#eaf3de;--grntx:#27500a;color-scheme:light dark}
-@media (prefers-color-scheme:dark){:root{--bg:#1a1a18;--card:#262624;--text:#f1efe8;--muted:#a3a29b;--line:#3a3a37;--redbg:#4a1b1b;--redtx:#f7c1c1;--ambbg:#4a3410;--ambtx:#fac775;--grnbg:#1f3a15;--grntx:#c0dd97}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1a18;--card:#262624;--text:#f1efe8;--muted:#a3a29b;--line:#3a3a37;--redbg:#4a1b1b;--redtx:#f7c1c1;--ambbg:#4a3410;--ambtx:#fac775;--grnbg:#1f3a15;--grntx:#c0dd97}}
+:root[data-theme="dark"]{--bg:#1a1a18;--card:#262624;--text:#f1efe8;--muted:#a3a29b;--line:#3a3a37;--redbg:#4a1b1b;--redtx:#f7c1c1;--ambbg:#4a3410;--ambtx:#fac775;--grnbg:#1f3a15;--grntx:#c0dd97;color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
+.theme{font:inherit;font-size:13px;color:var(--text);background:var(--card);border:0.5px solid var(--line);border-radius:8px;padding:6px 12px;min-height:36px;cursor:pointer}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
 main{max-width:720px;margin:0 auto}
@@ -38,7 +42,7 @@ h1{font-size:20px;font-weight:500;margin:0}
 </head>
 <body>
 <main>
-  <div class="top"><h1 id="title">Fleet maintenance hours</h1><span class="sub" id="updated"></span></div>
+  <div class="top"><h1 id="title">Fleet maintenance hours</h1><div style="display:flex;align-items:center;gap:10px"><span class="sub" id="updated"></span><button class="theme" id="theme" aria-label="Switch between light and dark mode"></button></div></div>
   <div id="banners"></div>
   <div class="seg" id="bases" aria-label="Base"></div>
   <div class="seg" id="views" aria-label="View"></div>
@@ -154,8 +158,13 @@ function render(){
   document.getElementById("foot").textContent="Hours remaining until each scheduled check. Red "+d.T.red+" hrs or less, amber "+d.T.amber+" or less. Confirm against official maintenance records.";
 }
 
+function curTheme(){var t=document.documentElement.getAttribute("data-theme");return t==="light"||t==="dark"?t:(window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");}
+function setTheme(t){document.documentElement.setAttribute("data-theme",t);document.getElementById("theme").textContent=t==="dark"?"☀ Light mode":"☾ Dark mode";}
+setTheme(curTheme());
+
 document.addEventListener("click",function(e){
   var b=e.target.closest("button");if(!b)return;
+  if(b.id==="theme"){var n=curTheme()==="dark"?"light":"dark";setTheme(n);store("theme",n);return;}
   if(b.dataset.base){state.base=b.dataset.base;store("base",state.base);render();}
   if(b.dataset.view){state.view=b.dataset.view;store("view",state.view);render();}
 });
