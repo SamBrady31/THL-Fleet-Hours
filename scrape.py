@@ -34,13 +34,19 @@ def main():
         browser = p.chromium.launch()
         page = browser.new_page()
 
-        page.goto(os.environ["AERONET_LOGIN_URL"])
-        page.get_by_placeholder("Username").fill(os.environ["AERONET_USER"])
-        page.get_by_placeholder("Password").fill(os.environ["AERONET_PASS"])
+        # .strip() removes stray spaces or line breaks pasted into the secrets
+        page.goto(os.environ["AERONET_LOGIN_URL"].strip())
+        page.get_by_placeholder("Username").fill(os.environ["AERONET_USER"].strip())
+        page.get_by_placeholder("Password").fill(os.environ["AERONET_PASS"].strip())
         page.get_by_role("button", name="Login").click()
+        try:
+            # Wait up to 30s for the password box to disappear (= login worked)
+            page.get_by_placeholder("Password").wait_for(state="hidden", timeout=30000)
+        except Exception:
+            print("Page address after login attempt:", page.url)
+            print("Page text (first 300 chars):", page.inner_text("body")[:300])
+            sys.exit("Login failed: still on the login page after 30 seconds.")
         page.wait_for_load_state("networkidle")
-        if page.get_by_placeholder("Password").count() > 0:
-            sys.exit("Login appears to have failed (still on the login page).")
 
         page.goto(os.environ["AERONET_FLEET_URL"])
         page.wait_for_load_state("networkidle")
