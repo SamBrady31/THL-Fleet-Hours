@@ -1,0 +1,32 @@
+name: Nightly Aeronet scrape
+
+on:
+  schedule:
+    - cron: "0 13 * * *"   # 13:00 UTC = 1-2am in New Zealand, after Aeronet's midnight update
+  workflow_dispatch: {}    # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install playwright && playwright install --with-deps chromium
+      - run: python scrape.py
+        env:
+          AERONET_LOGIN_URL: ${{ secrets.AERONET_LOGIN_URL }}
+          AERONET_FLEET_URL: ${{ secrets.AERONET_FLEET_URL }}
+          AERONET_USER: ${{ secrets.AERONET_USER }}
+          AERONET_PASS: ${{ secrets.AERONET_PASS }}
+      - name: Commit updated hours
+        run: |
+          git config user.name "hours-bot"
+          git config user.email "hours-bot@users.noreply.github.com"
+          git add docs/hours.json
+          git diff --staged --quiet || git commit -m "Update hours"
+          git push
