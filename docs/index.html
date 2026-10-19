@@ -27,6 +27,7 @@ h1{font-size:20px;font-weight:500;margin:0}
 .small{font-size:12px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .card{background:var(--card);border:0.5px solid var(--line);border-radius:12px;padding:12px}
+.card.open{grid-column:1/-1;border-color:var(--text)}
 .num{font-size:24px;font-weight:500;margin:2px 0 8px}
 .bar{height:6px;background:var(--bg);border-radius:3px}.bar i{display:block;height:6px;border-radius:3px}
 .tbl{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:6px;align-items:center;padding:6px 4px;border-top:0.5px solid var(--line)}
@@ -34,6 +35,18 @@ h1{font-size:20px;font-weight:500;margin:0}
 .tbl .c{text-align:center;font-size:14px;font-weight:500;padding:4px 0;border-radius:8px}
 .tbl.head span:not(:first-child){text-align:center}
 .foot{margin-top:16px}
+/* click to open */
+.clk{cursor:pointer}
+.clk:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.row.open{margin-bottom:2px;border-color:var(--text)}
+.chev{color:var(--muted);font-size:20px;line-height:1;transition:transform .15s}
+.open>.chev{transform:rotate(90deg)}
+.panel{margin:0 0 8px;padding:6px 12px 8px;background:var(--card);border:0.5px solid var(--line);border-radius:8px;cursor:default}
+.card .panel{margin:12px 0 0;padding:0;border:0;border-radius:0}
+.crow{display:flex;align-items:center;gap:12px;padding:10px 0}
+.crow+.crow{border-top:0.5px solid var(--line)}
+.crow .bar{margin:4px 0 2px}
+.phead{font-size:12px;color:var(--muted);padding:4px 0 6px}
 </style>
 </head>
 <body>
@@ -52,7 +65,7 @@ h1{font-size:20px;font-weight:500;margin:0}
 <script>
 var VIEWS=[["list","List"],["cards","Cards"],["detail","All checks"]];
 var INTERVALS=["50","100","300"];
-var state={hours:null,air:null,demo:false,base:null,view:"list"};
+var state={hours:null,air:null,demo:false,base:null,view:"list",open:{}};
 
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
@@ -65,7 +78,8 @@ function sample(){
   var hours={},air={};
   for(var i=0;i<24;i++){
     var t="ZK-HA"+L[i],h=Math.round((1000+r()*3000)*10)/10;hours[t]=h;
-    air[t]={base:bases[Math.floor(i/6)],due:{"50":Math.round((h+r()*50)*10)/10,"100":Math.round((h+r()*100)*10)/10,"300":Math.round((h+r()*300)*10)/10}};
+    air[t]={base:bases[Math.floor(i/6)],due:{"50":Math.round((h+r()*50)*10)/10,"100":Math.round((h+r()*100)*10)/10,"300":Math.round((h+r()*300)*10)/10},
+      other:[{name:"Tail rotor gearbox",due:Math.round((h+r()*200)*10)/10},{name:"Main rotor head",due:Math.round((h+r()*400)*10)/10},{name:"Engine borescope",due:Math.round((h+r()*150)*10)/10}]};
   }
   return {hours:{updated:new Date().toISOString(),aircraft:hours},air:{thresholds:{red:5,amber:20},aircraft:air}};
 }
@@ -78,19 +92,26 @@ function load(){
   .then(render);
 }
 
+/* Every check an aircraft has: the 50/100/300 hr ones from "due", plus any extras listed in "other".
+   A due value of 0 (or missing) means "not entered yet" and is skipped. */
 function compute(base){
   var T=state.air.thresholds||{red:5,amber:20},out=[];
   Object.keys(state.air.aircraft).forEach(function(tail){
     var a=state.air.aircraft[tail];if(a.base!==base)return;
-    var h=state.hours.aircraft[tail],rem={},next=null;
+    var h=state.hours.aircraft[tail],rem={},checks=[],next=null;
     if(typeof h==="number"){
-      INTERVALS.forEach(function(n){
-        if(typeof a.due[n]!=="number")return;
-        rem[n]=a.due[n]-h;
-        if(!next||rem[n]<next.v)next={n:n,v:rem[n]};
-      });
+      var add=function(name,due,span,main,key){
+        if(typeof due!=="number"||due<=0)return;
+        var c={name:name,due:due,v:due-h,span:span,main:main};
+        checks.push(c);
+        if(key)rem[key]=c.v;
+        if(!next||c.v<next.v)next=c;
+      };
+      INTERVALS.forEach(function(n){add(n+" hr",a.due&&a.due[n],Number(n),n==="50",n);});
+      (a.other||[]).forEach(function(o){add(o.name,o.due,o.interval||100,false);});
     }
-    out.push({tail:tail,rem:rem,next:next,h:h});
+    checks.sort(function(x,y){return ((y.main?1:0)-(x.main?1:0))||(x.v-y.v);});
+    out.push({tail:tail,rem:rem,checks:checks,next:next,h:h});
   });
   out.sort(function(a,b){return (a.next?a.next.v:1e9)-(b.next?b.next.v:1e9);});
   return {list:out,T:T};
@@ -98,32 +119,57 @@ function compute(base){
 
 function val(v){return v<0?f(-v)+" over":f(v);}
 function th(a){return typeof a.h==="number"?' <span class="small" style="font-weight:400">('+f(a.h)+')</span>':'';}
+function pct(c){return Math.round(Math.max(0,Math.min(c.v/c.span,1))*100);}
+function attrs(a,o){return ' data-tail="'+esc(a.tail)+'" role="button" tabindex="0" aria-expanded="'+o+'"';}
+
+/* The opened-up panel: every upcoming check for one aircraft */
+function panel(a,d){
+  var s='<div class="panel">';
+  var ao=state.hours.as_of&&state.hours.as_of[a.tail];
+  if(ao){
+    var days=Math.floor((Date.now()-new Date(ao+"T00:00:00").getTime())/864e5);
+    if(days>=3)s+='<div class="banner amb" style="margin:6px 0">Aeronet hours for this aircraft were last updated '+days+' days ago, so these numbers may be out of date.</div>';
+  }
+  if(!a.checks.length)return s+'<div class="phead">No check hours entered for this aircraft yet. Add them in aircraft.json.</div></div>';
+  s+='<div class="phead">'+(typeof a.h==="number"?f(a.h)+' total hrs · ':'')+a.checks.length+' upcoming checks · 50 hr first, then soonest</div>';
+  a.checks.forEach(function(c){
+    var l=lvl(c.v,d.T);
+    s+='<div class="crow"><span class="dot d-'+l+'"></span><div class="grow"><div><span class="tail">'+esc(c.name)+'</span>'+(c.main?' <span class="small">main check</span>':'')+'</div><div class="bar"><i class="d-'+l+'" style="width:'+pct(c)+'%"></i></div><div class="small">due at '+f(c.due)+' hrs</div></div><span class="big">'+val(c.v)+'</span></div>';
+  });
+  return s+'</div>';
+}
 
 function vList(d){
   return d.list.map(function(a){
-    if(!a.next)return '<div class="row"><span class="dot" style="background:var(--muted)"></span><span class="tail grow">'+esc(a.tail)+th(a)+'</span><span class="small">No data</span></div>';
-    var l=lvl(a.next.v,d.T);
-    return '<div class="row"><span class="dot d-'+l+'"></span><span class="tail grow">'+esc(a.tail)+th(a)+'</span><span class="small">'+a.next.n+'-hr check</span><span class="big">'+val(a.next.v)+'</span></div>';
+    var o=!!state.open[a.tail];
+    var dot=a.next?'<span class="dot d-'+lvl(a.next.v,d.T)+'"></span>':'<span class="dot" style="background:var(--muted)"></span>';
+    var right=a.next?'<span class="small">'+esc(a.next.name)+'</span><span class="big">'+val(a.next.v)+'</span>':'<span class="small">Not set</span>';
+    return '<div class="row clk'+(o?' open':'')+'"'+attrs(a,o)+'>'+dot+'<span class="tail grow">'+esc(a.tail)+th(a)+'</span>'+right+'<span class="chev">›</span></div>'+(o?panel(a,d):'');
   }).join("");
 }
 
 function vCards(d){
   return '<div class="grid">'+d.list.map(function(a){
-    if(!a.next)return '<div class="card"><div class="small">'+esc(a.tail)+th(a)+'</div><div class="num">No data</div></div>';
-    var l=lvl(a.next.v,d.T),w=Math.round(Math.max(0,Math.min(a.next.v/Number(a.next.n),1))*100);
-    return '<div class="card"><div class="small">'+esc(a.tail)+th(a)+'</div><div class="num">'+val(a.next.v)+' <span class="small" style="font-weight:400">hrs</span></div><div class="bar"><i class="d-'+l+'" style="width:'+w+'%"></i></div><div class="small" style="margin-top:6px">to '+a.next.n+'-hr check</div></div>';
+    var o=!!state.open[a.tail],inner;
+    if(!a.next)inner='<div class="small">'+esc(a.tail)+th(a)+'</div><div class="num">Not set</div>';
+    else{
+      var l=lvl(a.next.v,d.T);
+      inner='<div class="small">'+esc(a.tail)+th(a)+'</div><div class="num">'+val(a.next.v)+' <span class="small" style="font-weight:400">hrs</span></div><div class="bar"><i class="d-'+l+'" style="width:'+pct(a.next)+'%"></i></div><div class="small" style="margin-top:6px">to '+esc(a.next.name)+'</div>';
+    }
+    return '<div class="card clk'+(o?' open':'')+'"'+attrs(a,o)+'>'+inner+(o?panel(a,d):'')+'</div>';
   }).join("")+'</div>';
 }
 
 function vDetail(d){
   var h='<div class="tbl head"><span>Aircraft</span><span>50 hr</span><span>100 hr</span><span>300 hr</span></div>';
   return h+d.list.map(function(a){
-    var s='<div class="tbl"><span class="tail" style="font-size:14px">'+esc(a.tail)+th(a)+'</span>';
+    var o=!!state.open[a.tail];
+    var s='<div class="tbl clk"'+attrs(a,o)+'><span class="tail" style="font-size:14px">'+esc(a.tail)+th(a)+'</span>';
     INTERVALS.forEach(function(n){
       var v=a.rem[n];
       s+=typeof v==="number"?'<span class="c '+lvl(v,d.T)+'">'+val(v)+'</span>':'<span class="c small">–</span>';
     });
-    return s+'</div>';
+    return s+'</div>'+(o?panel(a,d):'');
   }).join("");
 }
 
@@ -145,13 +191,24 @@ function render(){
 
   var d=compute(state.base);
   document.getElementById("view").innerHTML=state.view==="cards"?vCards(d):state.view==="detail"?vDetail(d):vList(d);
-  document.getElementById("foot").textContent="Hours remaining until each scheduled check. Red "+d.T.red+" hrs or less, amber "+d.T.amber+" or less. Confirm against official maintenance records.";
+  document.getElementById("foot").textContent="Tap an aircraft to see all its checks. Hours remaining until each scheduled check. Red "+d.T.red+" hrs or less, amber "+d.T.amber+" or less. Confirm against official maintenance records.";
 }
 
+function toggle(tail){state.open[tail]=!state.open[tail];render();}
+
 document.addEventListener("click",function(e){
-  var b=e.target.closest("button");if(!b)return;
-  if(b.dataset.base){state.base=b.dataset.base;store("base",state.base);render();}
-  if(b.dataset.view){state.view=b.dataset.view;store("view",state.view);render();}
+  var b=e.target.closest("button");
+  if(b){
+    if(b.dataset.base){state.base=b.dataset.base;store("base",state.base);render();}
+    if(b.dataset.view){state.view=b.dataset.view;store("view",state.view);render();}
+    return;
+  }
+  if(e.target.closest(".panel"))return;
+  var t=e.target.closest("[data-tail]");
+  if(t)toggle(t.dataset.tail);
+});
+document.addEventListener("keydown",function(e){
+  if((e.key==="Enter"||e.key===" ")&&e.target.dataset&&e.target.dataset.tail){e.preventDefault();toggle(e.target.dataset.tail);}
 });
 function loadHistory(){
   fetch("history.json?t="+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(h){
