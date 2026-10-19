@@ -6,10 +6,15 @@ each registration with its total hours, rather than relying on table selectors.
 """
 import json, os, re, sys
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
 
 OUT = "docs/hours.json"
 MIN_AIRCRAFT = 15  # fail loudly if we find fewer than this
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+)
 
 # "ZK-HAA @13/10/2026 8532.25"  or  "ZK-HAO (2660.95)" (techlog not found)
 # The (?![A-Za-z0-9-]) skips entries like "ZK-IBG-v2track" (the test aircraft)
@@ -29,38 +34,54 @@ def parse(text):
     return hours, as_of
 
 
+def log_response(r):
+    # Print only the method, status and path (never full addresses or form data)
+    if r.request.method == "POST" or r.status >= 400:
+        print(f"  network: {r.request.method} {r.status} {urlparse(r.url).path}")
+
+
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page()
+        page = browser.new_context(
+            user_agent=USER_AGENT, viewport={"width": 1280, "height": 900}
+        ).new_page()
+        page.on("response", log_response)
 
         # .strip() removes stray spaces or line breaks pasted into the secrets
         page.goto(os.environ["AERONET_LOGIN_URL"].strip())
-        page.get_by_placeholder("Username").fill(os.environ["AERONET_USER"].strip())
-        page.get_by_placeholder("Password").fill(os.environ["AERONET_PASS"].strip())
+        user = page.get_by_placeholder("Username")
+        pwd = page.get_by_placeholder("Password")
+        user.click()
+        user.press_sequentially(os.environ["AERONET_USER"].strip(), delay=40)
+        pwd.click()
+        pwd.press_sequentially(os.environ["AERONET_PASS"].strip(), delay=40)
         page.get_by_role("button", name="Login").click()
         try:
             # Wait up to 30s for the password box to disappear (= login worked)
-            page.get_by_placeholder("Password").wait_for(state="hidden", timeout=30000)
+            pwd.wait_for(state="hidden", timeout=30000)
         except Exception:
-            print("Page address after login attempt:", page.url)
             print("Page text (first 300 chars):", page.inner_text("body")[:300])
+            try:  # clear the fields so no credentials appear in the screenshot
+                user.fill("")
+                pwd.fill("")
+            except Exception:
+                pass
+            page.screenshot(path="debug.png")
             sys.exit("Login failed: still on the login page after 30 seconds.")
         page.wait_for_load_state("networkidle")
 
-        page.goto(os.environ["AERONET_FLEET_URL"])
+        page.goto(os.environ["AERONET_FLEET_URL"].strip())
         page.wait_for_load_state("networkidle")
         try:
             page.wait_for_function("document.body.innerText.includes('ZK-')", timeout=30000)
         except Exception:
             pass
         text = page.inner_text("body")
-        url = page.url
         browser.close()
 
     hours, as_of = parse(text)
     if len(hours) < MIN_AIRCRAFT:
-        print("Page address:", url)
         print("First 300 characters of page text:\n", text[:300])
         sys.exit(f"Only found {len(hours)} aircraft (expected at least {MIN_AIRCRAFT}).")
 
