@@ -44,6 +44,10 @@ h1{font-size:20px;font-weight:500;margin:0}
   <div class="seg" id="views" aria-label="View"></div>
   <div id="view"></div>
   <p class="small foot" id="foot"></p>
+  <details class="foot">
+    <summary class="small" style="cursor:pointer">Update history</summary>
+    <div id="histlist" class="small" style="max-height:240px;overflow:auto;margin-top:6px"></div>
+  </details>
 </main>
 <script>
 var VIEWS=[["list","List"],["cards","Cards"],["detail","All checks"]];
@@ -149,7 +153,16 @@ document.addEventListener("click",function(e){
   if(b.dataset.base){state.base=b.dataset.base;store("base",state.base);render();}
   if(b.dataset.view){state.view=b.dataset.view;store("view",state.view);render();}
 });
-load();setInterval(load,600000);
+function loadHistory(){
+  fetch("history.json?t="+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(h){
+    var rows=h.slice().reverse().map(function(e){
+      var d=new Date(e.time).toLocaleString("en-NZ",{timeZone:"Pacific/Auckland",weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+      return '<div>'+esc(d)+' · '+e.count+' aircraft</div>';
+    }).join("");
+    document.getElementById("histlist").innerHTML=rows||"No updates recorded yet.";
+  }).catch(function(){document.getElementById("histlist").textContent="No update history yet.";});
+}
+load();loadHistory();setInterval(load,600000);
 </script>
 </body>
 </html>
