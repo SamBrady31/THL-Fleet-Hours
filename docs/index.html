@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fleet maintenance hours</title>
+<style>
+:root{--bg:#f7f6f3;--card:#fff;--text:#1f1f1d;--muted:#6b6a66;--line:#e2e0da;--red:#d93a3a;--redbg:#fcebeb;--redtx:#8f1f1f;--amb:#e59a1b;--ambbg:#faeeda;--ambtx:#6b4306;--grn:#3f9a4a;--grnbg:#eaf3de;--grntx:#27500a;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#1a1a18;--card:#262624;--text:#f1efe8;--muted:#a3a29b;--line:#3a3a37;--redbg:#4a1b1b;--redtx:#f7c1c1;--ambbg:#4a3410;--ambtx:#fac775;--grnbg:#1f3a15;--grntx:#c0dd97}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+main{max-width:720px;margin:0 auto}
+h1{font-size:20px;font-weight:500;margin:0}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sub{font-size:13px;color:var(--muted)}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 0}
+.seg button{font:inherit;font-size:14px;color:var(--text);background:var(--card);border:0.5px solid var(--line);border-radius:8px;padding:8px 14px;min-height:40px;cursor:pointer}
+.seg button.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.banner{margin:12px 0 0;padding:10px 12px;border-radius:8px;font-size:14px}
+.red{background:var(--redbg);color:var(--redtx)}.amb{background:var(--ambbg);color:var(--ambtx)}.grn{background:var(--grnbg);color:var(--grntx)}
+#view{margin-top:16px}
+.row{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:6px;background:var(--card);border:0.5px solid var(--line);border-radius:8px}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}
+.d-red{background:var(--red)}.d-amb{background:var(--amb)}.d-grn{background:var(--grn)}
+.tail{font-weight:500}.grow{flex:1}
+.big{font-size:20px;font-weight:500;min-width:72px;text-align:right}
+.small{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.card{background:var(--card);border:0.5px solid var(--line);border-radius:12px;padding:12px}
+.num{font-size:24px;font-weight:500;margin:2px 0 8px}
+.bar{height:6px;background:var(--bg);border-radius:3px}.bar i{display:block;height:6px;border-radius:3px}
+.tbl{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:6px;align-items:center;padding:6px 4px;border-top:0.5px solid var(--line)}
+.tbl.head{border-top:0;font-size:12px;color:var(--muted)}
+.tbl .c{text-align:center;font-size:14px;font-weight:500;padding:4px 0;border-radius:8px}
+.tbl.head span:not(:first-child){text-align:center}
+.foot{margin-top:16px}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><h1 id="title">Fleet maintenance hours</h1><span class="sub" id="updated"></span></div>
+  <div id="banners"></div>
+  <div class="seg" id="bases" aria-label="Base"></div>
+  <div class="seg" id="views" aria-label="View"></div>
+  <div id="view"></div>
+  <p class="small foot" id="foot"></p>
+</main>
+<script>
+var VIEWS=[["list","List"],["cards","Cards"],["detail","All checks"]];
+var INTERVALS=["50","100","300"];
+var state={hours:null,air:null,demo:false,base:null,view:"list"};
+
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function f(v){return v.toFixed(1);}
+function lvl(v,T){return v<=T.red?"red":v<=T.amber?"amb":"grn";}
+
+function sample(){
+  var bases=["Queenstown","Auckland","Christchurch","Wellington"],L="ABCDEFGHIJKLMNOPQRSTUVWX",s=7;
+  var r=function(){s=(s*9301+49297)%233280;return s/233280;};
+  var hours={},air={};
+  for(var i=0;i<24;i++){
+    var t="ZK-HA"+L[i],h=Math.round((1000+r()*3000)*10)/10;hours[t]=h;
+    air[t]={base:bases[Math.floor(i/6)],due:{"50":Math.round((h+r()*50)*10)/10,"100":Math.round((h+r()*100)*10)/10,"300":Math.round((h+r()*300)*10)/10}};
+  }
+  return {hours:{updated:new Date().toISOString(),aircraft:hours},air:{thresholds:{red:5,amber:20},aircraft:air}};
+}
+
+function load(){
+  var t="?t="+Date.now();
+  return Promise.all([fetch("hours.json"+t).then(function(r){if(!r.ok)throw 0;return r.json();}),fetch("aircraft.json"+t).then(function(r){if(!r.ok)throw 0;return r.json();})])
+  .then(function(x){state.hours=x[0];state.air=x[1];state.demo=false;})
+  .catch(function(){var d=sample();state.hours=d.hours;state.air=d.air;state.demo=true;})
+  .then(render);
+}
+
+function compute(base){
+  var T=state.air.thresholds||{red:5,amber:20},out=[];
+  Object.keys(state.air.aircraft).forEach(function(tail){
+    var a=state.air.aircraft[tail];if(a.base!==base)return;
+    var h=state.hours.aircraft[tail],rem={},next=null;
+    if(typeof h==="number"){
+      INTERVALS.forEach(function(n){
+        if(typeof a.due[n]!=="number")return;
+        rem[n]=a.due[n]-h;
+        if(!next||rem[n]<next.v)next={n:n,v:rem[n]};
+      });
+    }
+    out.push({tail:tail,rem:rem,next:next});
+  });
+  out.sort(function(a,b){return (a.next?a.next.v:1e9)-(b.next?b.next.v:1e9);});
+  return {list:out,T:T};
+}
+
+function val(v){return v<0?f(-v)+" over":f(v);}
+
+function vList(d){
+  return d.list.map(function(a){
+    if(!a.next)return '<div class="row"><span class="dot" style="background:var(--muted)"></span><span class="tail grow">'+esc(a.tail)+'</span><span class="small">No data</span></div>';
+    var l=lvl(a.next.v,d.T);
+    return '<div class="row"><span class="dot d-'+l+'"></span><span class="tail grow">'+esc(a.tail)+'</span><span class="small">'+a.next.n+'-hr check</span><span class="big">'+val(a.next.v)+'</span></div>';
+  }).join("");
+}
+
+function vCards(d){
+  return '<div class="grid">'+d.list.map(function(a){
+    if(!a.next)return '<div class="card"><div class="small">'+esc(a.tail)+'</div><div class="num">No data</div></div>';
+    var l=lvl(a.next.v,d.T),w=Math.round(Math.max(0,Math.min(a.next.v/Number(a.next.n),1))*100);
+    return '<div class="card"><div class="small">'+esc(a.tail)+'</div><div class="num">'+val(a.next.v)+' <span class="small" style="font-weight:400">hrs</span></div><div class="bar"><i class="d-'+l+'" style="width:'+w+'%"></i></div><div class="small" style="margin-top:6px">to '+a.next.n+'-hr check</div></div>';
+  }).join("")+'</div>';
+}
+
+function vDetail(d){
+  var h='<div class="tbl head"><span>Aircraft</span><span>50 hr</span><span>100 hr</span><span>300 hr</span></div>';
+  return h+d.list.map(function(a){
+    var s='<div class="tbl"><span class="tail" style="font-size:14px">'+esc(a.tail)+'</span>';
+    INTERVALS.forEach(function(n){
+      var v=a.rem[n];
+      s+=typeof v==="number"?'<span class="c '+lvl(v,d.T)+'">'+val(v)+'</span>':'<span class="c small">–</span>';
+    });
+    return s+'</div>';
+  }).join("");
+}
+
+function render(){
+  var bases=[];
+  Object.keys(state.air.aircraft).forEach(function(t){var b=state.air.aircraft[t].base;if(bases.indexOf(b)<0)bases.push(b);});
+  if(bases.indexOf(state.base)<0){var sb=store("base");state.base=bases.indexOf(sb)>=0?sb:bases[0];}
+  var sv=store("view");if(sv&&VIEWS.some(function(v){return v[0]===sv;}))state.view=sv;
+
+  document.getElementById("title").textContent=state.base+" base";
+  document.getElementById("bases").innerHTML=bases.map(function(b){return '<button data-base="'+esc(b)+'" class="'+(b===state.base?"on":"")+'">'+esc(b)+'</button>';}).join("");
+  document.getElementById("views").innerHTML=VIEWS.map(function(v){return '<button data-view="'+v[0]+'" class="'+(v[0]===state.view?"on":"")+'">'+v[1]+'</button>';}).join("");
+
+  var up=new Date(state.hours.updated),age=(Date.now()-up.getTime())/36e5,ban="";
+  document.getElementById("updated").textContent="Updated "+up.toLocaleString("en-NZ",{timeZone:"Pacific/Auckland",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+  if(state.demo)ban+='<div class="banner amb">Showing sample data. Couldn’t load the live hours.</div>';
+  else if(age>30)ban+='<div class="banner red">These hours are more than a day old. Check the nightly update before relying on them.</div>';
+  document.getElementById("banners").innerHTML=ban;
+
+  var d=compute(state.base);
+  document.getElementById("view").innerHTML=state.view==="cards"?vCards(d):state.view==="detail"?vDetail(d):vList(d);
+  document.getElementById("foot").textContent="Hours remaining until each scheduled check. Red "+d.T.red+" hrs or less, amber "+d.T.amber+" or less. Confirm against official maintenance records.";
+}
+
+document.addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;
+  if(b.dataset.base){state.base=b.dataset.base;store("base",state.base);render();}
+  if(b.dataset.view){state.view=b.dataset.view;store("view",state.view);render();}
+});
+load();setInterval(load,600000);
+</script>
+</body>
+</html>

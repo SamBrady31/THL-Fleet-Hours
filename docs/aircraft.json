@@ -1,0 +1,200 @@
+{
+  "thresholds": {
+    "red": 5,
+    "amber": 20
+  },
+  "aircraft": {
+    "ZK-HAA": {
+      "base": "Queenstown",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAB": {
+      "base": "Queenstown",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAC": {
+      "base": "Queenstown",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAD": {
+      "base": "Queenstown",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAE": {
+      "base": "Queenstown",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAF": {
+      "base": "Queenstown",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAG": {
+      "base": "Auckland",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAH": {
+      "base": "Auckland",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAI": {
+      "base": "Auckland",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAJ": {
+      "base": "Auckland",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAK": {
+      "base": "Auckland",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAL": {
+      "base": "Auckland",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAM": {
+      "base": "Christchurch",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAN": {
+      "base": "Christchurch",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAO": {
+      "base": "Christchurch",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAP": {
+      "base": "Christchurch",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAQ": {
+      "base": "Christchurch",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAR": {
+      "base": "Christchurch",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAS": {
+      "base": "Wellington",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAT": {
+      "base": "Wellington",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAU": {
+      "base": "Wellington",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAV": {
+      "base": "Wellington",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAW": {
+      "base": "Wellington",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    },
+    "ZK-HAX": {
+      "base": "Wellington",
+      "due": {
+        "50": 0,
+        "100": 0,
+        "300": 0
+      }
+    }
+  }
+}
