@@ -87,12 +87,47 @@ def main():
             fail(page, browser, "Did not reach the Modules page after login.")
         print("Logged in.")
 
-        for label in CLICK_PATH:
-            try:
-                page.get_by_text(label, exact=True).first.click(timeout=10000)
-            except Exception:
-                fail(page, browser, f"Could not find a menu item called '{label}'.")
-            page.wait_for_timeout(3000)
+                for label in CLICK_PATH:
+            print("URL before click:", page.url)
+            matches = page.get_by_text(label, exact=True)
+            n = matches.count()
+            print(f"Found {n} element(s) with text '{label}'")
+            for i in range(n):
+                el = matches.nth(i)
+                print(f"  #{i}: tag={el.evaluate('e => e.tagName')} "
+                      f"visible={el.is_visible()} "
+                      f"html={el.evaluate('e => e.outerHTML')[:200]}")
+
+            target = None
+            for i in range(n):
+                if matches.nth(i).is_visible():
+                    target = matches.nth(i)
+                    break
+            if target is None:
+                fail(page, browser, f"No visible menu item called '{label}'.")
+
+            start_text = page.inner_text("body")
+            # Try three ways of pressing it, stopping as soon as the page changes
+            for method in ("click", "parent click", "tap"):
+                try:
+                    if method == "click":
+                        target.click(timeout=10000)
+                    elif method == "parent click":
+                        target.locator("xpath=..").click(timeout=10000)
+                    else:
+                        target.dispatch_event("touchstart")
+                        target.dispatch_event("touchend")
+                        target.dispatch_event("click")
+                except Exception as e:
+                    print(f"  {method} failed:", str(e)[:100])
+                page.wait_for_timeout(3000)
+                if page.inner_text("body") != start_text:
+                    print(f"  page changed after: {method}")
+                    break
+                print(f"  page did NOT change after: {method}")
+
+            print("URL after click:", page.url)
+            print("Text after click (first 300 chars):", page.inner_text("body")[:300])
 
         try:
             page.wait_for_function("document.body.innerText.includes('ZK-')", timeout=20000)
