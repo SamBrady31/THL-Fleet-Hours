@@ -87,7 +87,7 @@ def main():
             fail(page, browser, "Did not reach the Modules page after login.")
         print("Logged in.")
 
-                for label in CLICK_PATH:
+        for label in CLICK_PATH:
             print("URL before click:", page.url)
             matches = page.get_by_text(label, exact=True)
             n = matches.count()
