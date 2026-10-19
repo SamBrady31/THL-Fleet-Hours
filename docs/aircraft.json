@@ -4,7 +4,7 @@
     "amber": 20
   },
   "aircraft": {
-    "ZK-HAA": {
+    "ZK-HYB": {
       "base": "Queenstown",
       "due": {
         "50": 0,
@@ -12,7 +12,7 @@
         "300": 0
       }
     },
-    "ZK-HAB": {
+    "ZK-IBG": {
       "base": "Queenstown",
       "due": {
         "50": 0,
@@ -20,7 +20,7 @@
         "300": 0
       }
     },
-    "ZK-HAC": {
+    "ZK-IBV": {
       "base": "Queenstown",
       "due": {
         "50": 0,
@@ -28,7 +28,7 @@
         "300": 0
       }
     },
-    "ZK-HAD": {
+    "ZK-ICZ": {
       "base": "Queenstown",
       "due": {
         "50": 0,
@@ -44,7 +44,7 @@
         "300": 0
       }
     },
-    "ZK-HAF": {
+    "ZK-HPS": {
       "base": "Queenstown",
       "due": {
         "50": 0,
@@ -52,52 +52,53 @@
         "300": 0
       }
     },
-    "ZK-HAG": {
-      "base": "Auckland",
+    "ZK-IDB": {
+      "base": "Queenstown",
       "due": {
         "50": 0,
         "100": 0,
         "300": 0
       }
     },
-    "ZK-HAH": {
-      "base": "Auckland",
+    "ZK-HCG": {
+      "base": "Mt Cook",
       "due": {
         "50": 0,
         "100": 0,
         "300": 0
       }
     },
-    "ZK-HAI": {
-      "base": "Auckland",
+    "ZK-INE": {
+      "base": "Mt Cook",
       "due": {
         "50": 0,
         "100": 0,
         "300": 0
       }
     },
-    "ZK-HAJ": {
-      "base": "Auckland",
+    "ZK-HSN": {
+      "base": "Mt Cook",
       "due": {
         "50": 0,
         "100": 0,
         "300": 0
       }
     },
-    "ZK-HAK": {
-      "base": "Auckland",
+    "ZK-ILN": {
+      "base": "Mt Cook",
       "due": {
         "50": 0,
         "100": 0,
         "300": 0
       }
     },
-    "ZK-HAL": {
-      "base": "Auckland",
+    "ZK-HRV": {
+      "base": "Mt Cook",
       "due": {
         "50": 0,
         "100": 0,
         "300": 0
+      }
       }
     },
     "ZK-HAM": {
