@@ -58,32 +58,28 @@ def main():
         pwd.press_sequentially(os.environ["AERONET_PASS"].strip(), delay=40)
         page.get_by_role("button", name="Login").click()
         try:
-            # Wait up to 30s for the password box to disappear (= login worked)
-            pwd.wait_for(state="hidden", timeout=30000)
+            # If login worked, the password box normally disappears
+            pwd.wait_for(state="hidden", timeout=10000)
         except Exception:
-            print("Page text (first 300 chars):", page.inner_text("body")[:300])
-            try:  # clear the fields so no credentials appear in the screenshot
-                user.fill("")
-                pwd.fill("")
-            except Exception:
-                pass
-            page.screenshot(path="debug.png")
-            sys.exit("Login failed: still on the login page after 30 seconds.")
+            print("Login form still showing after 10s; trying the fleet page anyway.")
         page.wait_for_load_state("networkidle")
 
         page.goto(os.environ["AERONET_FLEET_URL"].strip())
         page.wait_for_load_state("networkidle")
         try:
-            page.wait_for_function("document.body.innerText.includes('ZK-')", timeout=30000)
+            page.wait_for_function("document.body.innerText.includes('ZK-')", timeout=15000)
         except Exception:
             pass
         text = page.inner_text("body")
-        browser.close()
+        hours, as_of = parse(text)
 
-    hours, as_of = parse(text)
-    if len(hours) < MIN_AIRCRAFT:
-        print("First 300 characters of page text:\n", text[:300])
-        sys.exit(f"Only found {len(hours)} aircraft (expected at least {MIN_AIRCRAFT}).")
+        if len(hours) < MIN_AIRCRAFT:
+            print("Login box showing on fleet page:", page.get_by_placeholder("Password").count() > 0)
+            print("Page text (first 300 chars):", text[:300])
+            page.screenshot(path="debug.png")
+            browser.close()
+            sys.exit(f"Only found {len(hours)} aircraft (expected at least {MIN_AIRCRAFT}).")
+        browser.close()
 
     os.makedirs("docs", exist_ok=True)
     with open(OUT, "w") as f:
