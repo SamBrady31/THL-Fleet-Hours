@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
 
 OUT = "docs/hours.json"
+HISTORY = "docs/history.json"
 MIN_AIRCRAFT = 15  # fail loudly if we find fewer than this
 CLICK_PATH = ["Tech Log"]  # menu items to tap after login, in order (we may need to adjust)
 USER_AGENT = (
@@ -147,6 +148,15 @@ def main():
             {"updated": datetime.now(timezone.utc).isoformat(), "aircraft": hours, "as_of": as_of},
             f, indent=2,
         )
+    try:
+        with open(HISTORY) as f:
+            history = json.load(f)
+    except Exception:
+        history = []
+    history.append({"time": datetime.now(timezone.utc).isoformat(), "count": len(hours)})
+    history = history[-90:]  # keep the last 90 successful runs
+    with open(HISTORY, "w") as f:
+        json.dump(history, f, indent=2)    
     print(f"Saved {len(hours)} aircraft to {OUT}")
 
 
