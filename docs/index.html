@@ -97,7 +97,7 @@ function th(a){return typeof a.h==="number"?' <span class="small" style="font-we
 
 function vList(d){
   return d.list.map(function(a){
-    if(!a.next)return '<div class="row"><span class="dot" style="background:var(--muted)"></span><span class="tail grow">'+esc(a.tail)+th(a)'</span><span class="small">No data</span></div>';
+    if(!a.next)return '<div class="row"><span class="dot" style="background:var(--muted)"></span><span class="tail grow">'+esc(a.tail)+th(a)+'</span><span class="small">No data</span></div>';
     var l=lvl(a.next.v,d.T);
     return '<div class="row"><span class="dot d-'+l+'"></span><span class="tail grow">'+esc(a.tail)+th(a)+'</span><span class="small">'+a.next.n+'-hr check</span><span class="big">'+val(a.next.v)+'</span></div>';
   }).join("");
@@ -105,16 +105,16 @@ function vList(d){
 
 function vCards(d){
   return '<div class="grid">'+d.list.map(function(a){
-    if(!a.next)return '<div class="card"><div class="small">'+esc(a.tail)+th(a)'</div><div class="num">No data</div></div>';
+    if(!a.next)return '<div class="card"><div class="small">'+esc(a.tail)+th(a)+'</div><div class="num">No data</div></div>';
     var l=lvl(a.next.v,d.T),w=Math.round(Math.max(0,Math.min(a.next.v/Number(a.next.n),1))*100);
-    return '<div class="card"><div class="small">'+esc(a.tail)+th(a)'</div><div class="num">'+val(a.next.v)+' <span class="small" style="font-weight:400">hrs</span></div><div class="bar"><i class="d-'+l+'" style="width:'+w+'%"></i></div><div class="small" style="margin-top:6px">to '+a.next.n+'-hr check</div></div>';
+    return '<div class="card"><div class="small">'+esc(a.tail)+th(a)+'</div><div class="num">'+val(a.next.v)+' <span class="small" style="font-weight:400">hrs</span></div><div class="bar"><i class="d-'+l+'" style="width:'+w+'%"></i></div><div class="small" style="margin-top:6px">to '+a.next.n+'-hr check</div></div>';
   }).join("")+'</div>';
 }
 
 function vDetail(d){
   var h='<div class="tbl head"><span>Aircraft</span><span>50 hr</span><span>100 hr</span><span>300 hr</span></div>';
   return h+d.list.map(function(a){
-    var s='<div class="tbl"><span class="tail" style="font-size:14px">'+esc(a.tail)+th(a)'</span>';
+    var s='<div class="tbl"><span class="tail" style="font-size:14px">'+esc(a.tail)+th(a)+'</span>';
     INTERVALS.forEach(function(n){
       var v=a.rem[n];
       s+=typeof v==="number"?'<span class="c '+lvl(v,d.T)+'">'+val(v)+'</span>':'<span class="c small">–</span>';
