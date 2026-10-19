@@ -41,7 +41,9 @@ def log_response(r):
         print(f"  network: {r.request.method} {r.status} {urlparse(r.url).path}")
         if r.request.method == "POST":
             try:
-                print("  reply starts:", r.text()[:150].replace("\n", " "))
+                body = r.text()
+                print("  reply contains 'Modules':", "Modules" in body,
+                      "| contains 'Password':", "Password" in body)
             except Exception:
                 pass
 
@@ -73,12 +75,15 @@ def main():
         user.press_sequentially(os.environ["AERONET_USER"].strip(), delay=40)
         pwd.click()
         pwd.press_sequentially(os.environ["AERONET_PASS"].strip(), delay=40)
+        print("Typed username correctly:", user.input_value() == os.environ["AERONET_USER"].strip())
+        print("Typed password correctly:", pwd.input_value() == os.environ["AERONET_PASS"].strip())
         page.get_by_role("button", name="Login").click()
 
         # The page after a successful login is titled "Modules"
         try:
             page.wait_for_function("document.body.innerText.includes('Modules')", timeout=20000)
         except Exception:
+            print("Cookies set by Aeronet:", len(page.context.cookies()))
             fail(page, browser, "Did not reach the Modules page after login.")
         print("Logged in.")
 
