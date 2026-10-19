@@ -1,64 +1,70 @@
 """Nightly scrape of Aeronet total flight hours -> docs/hours.json
 
-Credentials come from environment variables (GitHub Actions secrets):
-  AERONET_LOGIN_URL, AERONET_FLEET_URL, AERONET_USER, AERONET_PASS
-
-Lines marked TODO need adjusting to Aeronet's real page.
+Secrets (set in GitHub): AERONET_LOGIN_URL, AERONET_FLEET_URL, AERONET_USER, AERONET_PASS
+The fleet page is a list of aircraft, so we read the page text and pull out
+each registration with its total hours, rather than relying on table selectors.
 """
 import json, os, re, sys
 from datetime import datetime, timezone
 from playwright.sync_api import sync_playwright
 
-EXPECTED_AIRCRAFT = 24
 OUT = "docs/hours.json"
+MIN_AIRCRAFT = 15  # fail loudly if we find fewer than this
 
-# TODO: replace with the real selectors from the Aeronet pages
-USER_FIELD = "input[name='username']"
-PASS_FIELD = "input[name='password']"
-SUBMIT_BTN = "button[type='submit']"
-ROW_SELECTOR = "table tbody tr"   # one row per helicopter
-TAIL_COL = 0                      # column index of tail number
-HOURS_COL = 3                     # column index of total hours
+# "ZK-HAA @13/10/2026 8532.25"  or  "ZK-HAO (2660.95)" (techlog not found)
+# The (?![A-Za-z0-9-]) skips entries like "ZK-IBG-v2track" (the test aircraft)
+ROW = re.compile(
+    r"(ZK-[A-Z]{3})(?![A-Za-z0-9-])\s*"
+    r"(?:@(\d{1,2})/(\d{1,2})/(\d{4})\s+|\()\s*([\d,]+(?:\.\d+)?)"
+)
 
 
-def parse_hours(text):
-    m = re.search(r"\d[\d,]*\.?\d*", text)
-    if not m:
-        raise ValueError(f"No number in {text!r}")
-    return float(m.group().replace(",", ""))
+def parse(text):
+    hours, as_of = {}, {}
+    for m in ROW.finditer(text):
+        tail = m.group(1)
+        hours[tail] = float(m.group(5).replace(",", ""))
+        if m.group(2):
+            as_of[tail] = f"{m.group(4)}-{int(m.group(3)):02d}-{int(m.group(2)):02d}"
+    return hours, as_of
 
 
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
-        page.goto(os.environ["AERONET_LOGIN_URL"])
-        page.fill(USER_FIELD, os.environ["AERONET_USER"])
-        page.fill(PASS_FIELD, os.environ["AERONET_PASS"])
-        page.click(SUBMIT_BTN)
-        page.wait_for_load_state("networkidle")
-        page.goto(os.environ["AERONET_FLEET_URL"])
-        page.wait_for_selector(ROW_SELECTOR)
 
-        aircraft = {}
-        for row in page.query_selector_all(ROW_SELECTOR):
-            cells = [c.inner_text().strip() for c in row.query_selector_all("td")]
-            if len(cells) <= max(TAIL_COL, HOURS_COL):
-                continue
-            aircraft[cells[TAIL_COL]] = parse_hours(cells[HOURS_COL])
+        page.goto(os.environ["AERONET_LOGIN_URL"])
+        page.get_by_placeholder("Username").fill(os.environ["AERONET_USER"])
+        page.get_by_placeholder("Password").fill(os.environ["AERONET_PASS"])
+        page.get_by_role("button", name="Login").click()
+        page.wait_for_load_state("networkidle")
+        if page.get_by_placeholder("Password").count() > 0:
+            sys.exit("Login appears to have failed (still on the login page).")
+
+        page.goto(os.environ["AERONET_FLEET_URL"])
+        page.wait_for_load_state("networkidle")
+        try:
+            page.wait_for_function("document.body.innerText.includes('ZK-')", timeout=30000)
+        except Exception:
+            pass
+        text = page.inner_text("body")
+        url = page.url
         browser.close()
 
-    # Fail loudly rather than publish partial or stale-looking data
-    if len(aircraft) != EXPECTED_AIRCRAFT:
-        sys.exit(f"Expected {EXPECTED_AIRCRAFT} aircraft, found {len(aircraft)}")
+    hours, as_of = parse(text)
+    if len(hours) < MIN_AIRCRAFT:
+        print("Page address:", url)
+        print("First 300 characters of page text:\n", text[:300])
+        sys.exit(f"Only found {len(hours)} aircraft (expected at least {MIN_AIRCRAFT}).")
 
     os.makedirs("docs", exist_ok=True)
     with open(OUT, "w") as f:
         json.dump(
-            {"updated": datetime.now(timezone.utc).isoformat(), "aircraft": aircraft},
+            {"updated": datetime.now(timezone.utc).isoformat(), "aircraft": hours, "as_of": as_of},
             f, indent=2,
         )
-    print(f"Saved {len(aircraft)} aircraft to {OUT}")
+    print(f"Saved {len(hours)} aircraft to {OUT}")
 
 
 if __name__ == "__main__":
