@@ -13,27 +13,40 @@
 
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
-.layout{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+.layout{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px;align-items:start}
 .layout>main{grid-column:2;grid-row:1;min-width:0}
-.notes{grid-column:1;grid-row:1;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;background:var(--card);border:0.5px solid var(--line);border-radius:12px;padding:12px}
-.notes h2{font-size:16px;font-weight:500;margin:0 0 8px}
-.notes label{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
-.notes input,.notes textarea{width:100%;font:inherit;font-size:16px;color:var(--text);background:var(--bg);border:0.5px solid var(--line);border-radius:8px;padding:8px 10px}
-.notes textarea{resize:vertical;min-height:84px}
-.notes input:focus-visible,.notes textarea:focus-visible{outline:2px solid var(--text);outline-offset:1px}
-#nSave{font:inherit;font-size:14px;color:var(--bg);background:var(--text);border:0;border-radius:8px;padding:8px 14px;min-height:40px;cursor:pointer;margin-top:10px}
+.notes{grid-column:1;grid-row:1;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;padding:2px 16px 0 0;border-right:0.5px solid var(--line);font-size:13px;color:var(--muted)}
+.notes h2{font-size:12px;font-weight:500;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em}
+.notes label{display:block;font-size:11px;color:var(--muted);margin:6px 0 2px}
+.notes input,.notes textarea{width:100%;font:inherit;font-size:13px;color:var(--text);background:transparent;border:0.5px solid var(--line);border-radius:6px;padding:6px 8px}
+.notes textarea{resize:vertical;min-height:56px}
+.notes input:focus-visible,.notes textarea:focus-visible{outline:1px solid var(--muted);outline-offset:1px}
+#nSave{font:inherit;font-size:13px;color:var(--muted);background:none;border:0.5px solid var(--line);border-radius:6px;padding:5px 12px;min-height:32px;cursor:pointer;margin-top:8px}
+#nSave:hover{color:var(--text)}
 #nSave:disabled{opacity:.5;cursor:default}
-.notes .banner{margin:0 0 8px;font-size:12px}
-.nitem{padding:10px 0;border-top:0.5px solid var(--line)}
-.nitem .who{font-size:14px;font-weight:500}
-.nitem .txt{font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:2px}
-#nList{margin-top:12px}
-@media (max-width:859px){.layout{grid-template-columns:1fr}.layout>main,.notes{grid-column:1}.notes{grid-row:2;position:static;max-height:none}}
+.notes .banner{background:none;color:var(--amb);padding:0;margin:0 0 6px;font-size:11px}
+#nList{margin-top:10px}
+.nitem{padding:7px 0;border-top:0.5px solid var(--line)}
+.nitem .who{font-size:12px;font-weight:500;color:var(--muted)}
+.nitem .txt{font-size:13px;color:var(--text);opacity:.85;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:1px}
+.bh{font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:22px 0 8px}
+#view .bh:first-child{margin-top:0}
+@media (max-width:859px){
+.layout{grid-template-columns:1fr}
+.layout>main,.notes{grid-column:1}
+.notes{grid-row:2;position:static;max-height:none;border-right:0;border-top:0.5px solid var(--line);padding:14px 0 0}
+.notes input,.notes textarea{font-size:16px}
+}
+@media (max-width:600px){
+.bar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+#bases{margin-left:0;justify-content:flex-start}
+.seg button{flex:1 1 auto;padding:8px 10px;font-size:13px}
+}
 h1{font-size:20px;font-weight:500;margin:0}
 .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
 .sub{font-size:13px;color:var(--muted)}
 .seg{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 0}
-.seg button{font:inherit;font-size:14px;color:var(--text);background:var(--card);border:0.5px solid var(--line);border-radius:8px;padding:8px 14px;min-height:40px;cursor:pointer}
+.seg button{font:inherit;font-size:14px;color:var(--text);background:var(--card);border:0.5px solid var(--line);border-radius:8px;padding:8px 12px;min-height:40px;cursor:pointer}
 .seg button.on{background:var(--text);color:var(--bg);border-color:var(--text)}
 .bar{display:flex;justify-content:space-between;align-items:flex-start;gap:8px 16px;flex-wrap:wrap;margin:12px 0 0}
 .bar .seg{margin:0}
@@ -107,6 +120,7 @@ button:focus-visible,a.photo:focus-visible{outline:2px solid var(--text);outline
 </aside>
 </div>
 <script>
+var ALL="__all";
 var VIEWS=[["list","List"],["cards","Cards"],["detail","All checks"]];
 var state={hours:null,air:null,demo:false,base:null,view:"list",open:{}};
 
@@ -240,11 +254,11 @@ function vDetail(d){
 function render(){
   var bases=[];
   Object.keys(state.air.aircraft).forEach(function(t){var b=state.air.aircraft[t].base;if(bases.indexOf(b)<0)bases.push(b);});
-  if(bases.indexOf(state.base)<0){var sb=store("base");state.base=bases.indexOf(sb)>=0?sb:bases[0];}
+  if(state.base!==ALL&&bases.indexOf(state.base)<0){var sb=store("base");state.base=(sb===ALL||bases.indexOf(sb)>=0)?sb:bases[0];}
   var sv=store("view");if(sv&&VIEWS.some(function(v){return v[0]===sv;}))state.view=sv;
 
-  document.getElementById("title").textContent=state.base+" base";
-  document.getElementById("bases").innerHTML=bases.map(function(b){return '<button data-base="'+esc(b)+'" class="'+(b===state.base?"on":"")+'">'+esc(b)+'</button>';}).join("");
+  document.getElementById("title").textContent=state.base===ALL?"All bases":state.base+" base";
+  document.getElementById("bases").innerHTML=[ALL].concat(bases).map(function(b){return '<button data-base="'+esc(b)+'" class="'+(b===state.base?"on":"")+'">'+(b===ALL?"All bases":esc(b))+'</button>';}).join("");
   document.getElementById("views").innerHTML=VIEWS.map(function(v){return '<button data-view="'+v[0]+'" class="'+(v[0]===state.view?"on":"")+'">'+v[1]+'</button>';}).join("");
 
   var up=new Date(state.hours.updated),age=(Date.now()-up.getTime())/36e5,ban="";
@@ -253,8 +267,11 @@ function render(){
   else if(age>30)ban+='<div class="banner red">These hours are more than a day old. Check the nightly update before relying on them.</div>';
   document.getElementById("banners").innerHTML=ban;
 
-  var d=compute(state.base);
-  document.getElementById("view").innerHTML=state.view==="cards"?vCards(d):state.view==="detail"?vDetail(d):vList(d);
+  var fn=state.view==="cards"?vCards:state.view==="detail"?vDetail:vList,d,html="";
+  if(state.base===ALL){
+    bases.forEach(function(b){d=compute(b);html+='<div class="bh">'+esc(b)+'</div>'+fn(d);});
+  }else{d=compute(state.base);html=fn(d);}
+  document.getElementById("view").innerHTML=html;
   document.getElementById("foot").textContent="Hours or days remaining until each check, whichever comes first. Red: "+d.T.red+" hrs or "+d.T.redDays+" days or less. Amber: "+d.T.amber+" hrs or "+d.T.amberDays+" days or less. Listed in the order they are likely to fall due, assuming "+d.T.hoursPerDay+" flying hrs a day. Confirm against official maintenance records.";
 }
 
@@ -277,7 +294,7 @@ function loadHistory(){
 // ---------- Notes ----------
 // Paste your Google Apps Script web app link between the quotes to share notes between everyone.
 // While it is empty, notes are saved on this device only.
-var NOTES_URL="https://script.google.com/macros/s/AKfycbwttLjWUg0_z3epieCrzbjcfCWXvzmAxXGIVgm7xQsM-vIrbHhITa_Ql31lfKBegYkK/exec";
+var NOTES_URL="";
 var notes=[];
 function localNotes(){try{return JSON.parse(localStorage.getItem("notes")||"[]");}catch(e){return [];}}
 function fmtNoteTime(iso){
