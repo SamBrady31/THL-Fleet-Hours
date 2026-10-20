@@ -3,7 +3,8 @@
   "red": 5,
   "amber": 20,
   "redDays": 7,
-  "amberDays": 30
+  "amberDays": 30,
+  "hoursPerDay": 3
  },
  "aircraft": {
   "ZK-HYB": {
@@ -89,7 +90,9 @@
      "name": "Review of airworthiness",
      "date": "2027-03-11"
     }
-   ]
+   ],
+   "photo": "techlogs/ZK-HYB.jpg",
+   "photoDate": "2026-10-20"
   },
   "ZK-IBG": {
    "base": "Queenstown",
@@ -114,7 +117,9 @@
      "name": "Review of airworthiness",
      "date": "2026-12-12"
     }
-   ]
+   ],
+   "photo": "techlogs/ZK-IBG.jpg",
+   "photoDate": "2026-10-20"
   },
   "ZK-IBV": {
    "base": "Queenstown",
@@ -140,7 +145,9 @@
      "name": "Review of airworthiness",
      "date": "2026-11-22"
     }
-   ]
+   ],
+   "photo": "techlogs/ZK-IBV.jpg",
+   "photoDate": "2026-10-20"
   },
   "ZK-ICZ": {
    "base": "Queenstown",
@@ -157,7 +164,9 @@
      "name": "Review of airworthiness",
      "date": "2027-06-24"
     }
-   ]
+   ],
+   "photo": "techlogs/ZK-ICZ.jpg",
+   "photoDate": "2026-10-20"
   },
   "ZK-HAE": {
    "base": "Queenstown",
@@ -178,7 +187,9 @@
      "name": "Review of airworthiness",
      "date": "2026-11-03"
     }
-   ]
+   ],
+   "photo": "techlogs/ZK-HAE.jpg",
+   "photoDate": "2026-10-20"
   },
   "ZK-HPS": {
    "base": "Queenstown",
@@ -199,7 +210,9 @@
      "name": "Review of airworthiness",
      "date": "2026-11-03"
     }
-   ]
+   ],
+   "photo": "techlogs/ZK-HPS.jpg",
+   "photoDate": "2026-10-20"
   },
   "ZK-IDB": {
    "base": "Queenstown",
@@ -232,7 +245,9 @@
      "name": "Review of airworthiness",
      "date": "2027-05-14"
     }
-   ]
+   ],
+   "photo": "techlogs/ZK-IDB.jpg",
+   "photoDate": "2026-10-20"
   },
   "ZK-HCG": {
    "base": "Mt Cook",
