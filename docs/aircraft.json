@@ -1,200 +1,306 @@
 {
-  "thresholds": {
-    "red": 5,
-    "amber": 20
-  },
-  "aircraft": {
-    "ZK-HYB": {
-      "base": "Queenstown",
-      "due": {
-        "50": 317.9,
-        "100": 367.9,
-        "300": 616.9
-      }
+ "thresholds": {
+  "red": 5,
+  "amber": 20,
+  "redDays": 7,
+  "amberDays": 30
+ },
+ "aircraft": {
+  "ZK-HYB": {
+   "base": "Queenstown",
+   "type": "H130",
+   "sheet": "H3",
+   "raised": "2026-10-19",
+   "checks": [
+    {
+     "name": "E2-10 re-torques (swashplate attachments)",
+     "hours": 325.95,
+     "from": 317.95
     },
-    "ZK-IBG": {
-      "base": "Queenstown",
-      "due": {
-        "50": 1582.05,
-        "100": 1596.05,
-        "300": 1670.05
-      }
+    {
+     "name": "25 hr engine power check",
+     "hours": 340.95
     },
-    "ZK-IBV": {
-      "base": "Queenstown",
-      "due": {
-        "50": 9288.8,
-        "100": 9343.8,
-        "300": 9544.8
-      }
+    {
+     "name": "25 hr engine power check",
+     "hours": 365.95
     },
-    "ZK-ICZ": {
-      "base": "Queenstown",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "50 hr airframe inspection",
+     "hours": 365.95
     },
-    "ZK-HAE": {
-      "base": "Queenstown",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "25 hr engine power check",
+     "hours": 390.95
     },
-    "ZK-HPS": {
-      "base": "Queenstown",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "300 hr M/R blade inspection (S/N 51818)",
+     "hours": 411.4,
+     "from": 396.4
     },
-    "ZK-IDB": {
-      "base": "Queenstown",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "25 hr engine power check",
+     "hours": 415.95
     },
-    "ZK-HCG": {
-      "base": "Mt Cook",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "50 hr airframe inspection",
+     "hours": 415.95
     },
-    "ZK-INE": {
-      "base": "Mt Cook",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "25 hr engine power check",
+     "hours": 440.95
     },
-    "ZK-HSN": {
-      "base": "Mt Cook",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "450 hr M/R blade inspection (S/N 51753, 52307)",
+     "hours": 465.0,
+     "from": 450.0,
+     "note": "Sheet prints 450.00-415.00. Assumed 450-465. Confirm with engineer."
     },
-    "ZK-ILN": {
-      "base": "Mt Cook",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "25 hr engine power check",
+     "hours": 465.95
     },
-    "ZK-HRV": {
-      "base": "Mt Cook",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "50 hr airframe inspection",
+     "hours": 465.95
     },
-    "ZK-HAM": {
-      "base": "Christchurch",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "150 hr / 12 mth inspection",
+     "hours": 465.95,
+     "date": "2027-10-19"
     },
-    "ZK-HAN": {
-      "base": "Christchurch",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "12 mth GI275 inspection",
+     "date": "2027-03-01"
     },
-    "ZK-HAO": {
-      "base": "Christchurch",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "600 hr / 12 mth airframe inspection (ext available)",
+     "date": "2027-07-13"
     },
-    "ZK-HAP": {
-      "base": "Christchurch",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "First aid kit inspection",
+     "date": "2027-07-13"
     },
-    "ZK-HAQ": {
-      "base": "Christchurch",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "600 hr / 24 mth inspection (ext available)",
+     "date": "2027-09-24"
     },
-    "ZK-HAR": {
-      "base": "Christchurch",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
-    },
-    "ZK-HAS": {
-      "base": "Wellington",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
-    },
-    "ZK-HAT": {
-      "base": "Wellington",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
-    },
-    "ZK-HAU": {
-      "base": "Wellington",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
-    },
-    "ZK-HAV": {
-      "base": "Wellington",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
-    },
-    "ZK-HAW": {
-      "base": "Wellington",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
-    },
-    "ZK-HAX": {
-      "base": "Wellington",
-      "due": {
-        "50": 0,
-        "100": 0,
-        "300": 0
-      }
+    {
+     "name": "Review of airworthiness",
+     "date": "2027-03-11"
     }
+   ]
+  },
+  "ZK-IBG": {
+   "base": "Queenstown",
+   "type": "EC130 T2",
+   "sheet": "17",
+   "raised": "2026-08-04",
+   "checks": [
+    {
+     "name": "25 hr engine power check",
+     "hours": 1587.1
+    },
+    {
+     "name": "50 hr airframe inspection",
+     "hours": 1587.1
+    },
+    {
+     "name": "150 hr / 12 mth inspection",
+     "hours": 1637.1,
+     "date": "2027-08-04"
+    },
+    {
+     "name": "Review of airworthiness",
+     "date": "2026-12-12"
+    }
+   ]
+  },
+  "ZK-IBV": {
+   "base": "Queenstown",
+   "type": "AS350 B2",
+   "sheet": "42",
+   "raised": "2026-09-21",
+   "checks": [
+    {
+     "name": "150 hr / 6 mth and 600 hr / 6 mth inspections",
+     "date": "2026-10-24"
+    },
+    {
+     "name": "150 hr / 300 hr / 12 mth inspection",
+     "hours": 9244.6,
+     "date": "2026-12-05",
+     "note": "Aeronet already shows 9244.75 hrs. Check the sheet and with the engineer."
+    },
+    {
+     "name": "12 mth fire extinguisher and first aid kit",
+     "date": "2026-12-05"
+    },
+    {
+     "name": "Review of airworthiness",
+     "date": "2026-11-22"
+    }
+   ]
+  },
+  "ZK-ICZ": {
+   "base": "Queenstown",
+   "type": "AS350 B2",
+   "sheet": "22",
+   "raised": "2026-06-23",
+   "checks": [
+    {
+     "name": "150 hr / 6 mth inspection",
+     "hours": 3817.4,
+     "date": "2026-12-21"
+    },
+    {
+     "name": "Review of airworthiness",
+     "date": "2027-06-24"
+    }
+   ]
+  },
+  "ZK-HAE": {
+   "base": "Queenstown",
+   "type": "AS350 B2",
+   "sheet": "42",
+   "raised": "2026-05-13",
+   "checks": [
+    {
+     "name": "Cargo hook overhaul (no ext available)",
+     "date": "2026-11-04"
+    },
+    {
+     "name": "150 hr / 6 mth inspection",
+     "hours": 7513.7,
+     "date": "2026-11-13"
+    },
+    {
+     "name": "Review of airworthiness",
+     "date": "2026-11-03"
+    }
+   ]
+  },
+  "ZK-HPS": {
+   "base": "Queenstown",
+   "type": "AS350 B2",
+   "sheet": "51",
+   "raised": "2026-02-27",
+   "checks": [
+    {
+     "name": "Various mod inspections",
+     "date": "2026-10-24"
+    },
+    {
+     "name": "150 / 300 hr engine inspection (no extension)",
+     "hours": 5581.4,
+     "date": "2026-11-29"
+    },
+    {
+     "name": "Review of airworthiness",
+     "date": "2026-11-03"
+    }
+   ]
+  },
+  "ZK-IDB": {
+   "base": "Queenstown",
+   "type": "AS350 B2",
+   "sheet": "22",
+   "raised": "2026-09-02",
+   "checks": [
+    {
+     "name": "12 mth fire extinguisher and first aid kit",
+     "date": "2026-11-20"
+    },
+    {
+     "name": "ASB 11-30-001 sliding door placard",
+     "date": "2026-12-20"
+    },
+    {
+     "name": "Overspeed bleed valve replacement",
+     "date": "2026-12-26"
+    },
+    {
+     "name": "EASA 2026-0052 fuse cover attachments inspection",
+     "date": "2026-12-26"
+    },
+    {
+     "name": "150 hr / 6 mth inspection",
+     "hours": 3551.25,
+     "date": "2027-03-04"
+    },
+    {
+     "name": "Review of airworthiness",
+     "date": "2027-05-14"
+    }
+   ]
+  },
+  "ZK-HCG": {
+   "base": "Mt Cook",
+   "checks": []
+  },
+  "ZK-INE": {
+   "base": "Mt Cook",
+   "checks": []
+  },
+  "ZK-HSN": {
+   "base": "Mt Cook",
+   "checks": []
+  },
+  "ZK-ILN": {
+   "base": "Mt Cook",
+   "checks": []
+  },
+  "ZK-HRV": {
+   "base": "Mt Cook",
+   "checks": []
+  },
+  "ZK-HAM": {
+   "base": "Christchurch",
+   "checks": []
+  },
+  "ZK-HAN": {
+   "base": "Christchurch",
+   "checks": []
+  },
+  "ZK-HAO": {
+   "base": "Christchurch",
+   "checks": []
+  },
+  "ZK-HAP": {
+   "base": "Christchurch",
+   "checks": []
+  },
+  "ZK-HAQ": {
+   "base": "Christchurch",
+   "checks": []
+  },
+  "ZK-HAR": {
+   "base": "Christchurch",
+   "checks": []
+  },
+  "ZK-HAS": {
+   "base": "Wellington",
+   "checks": []
+  },
+  "ZK-HAT": {
+   "base": "Wellington",
+   "checks": []
+  },
+  "ZK-HAU": {
+   "base": "Wellington",
+   "checks": []
+  },
+  "ZK-HAV": {
+   "base": "Wellington",
+   "checks": []
+  },
+  "ZK-HAW": {
+   "base": "Wellington",
+   "checks": []
+  },
+  "ZK-HAX": {
+   "base": "Wellington",
+   "checks": []
   }
+ }
 }
