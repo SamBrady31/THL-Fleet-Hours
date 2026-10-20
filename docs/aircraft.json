@@ -270,51 +270,51 @@
    "checks": []
   },
   "ZK-HAM": {
-   "base": "Christchurch",
+   "base": "Fox",
    "checks": []
   },
   "ZK-HAN": {
-   "base": "Christchurch",
+   "base": "Fox",
    "checks": []
   },
   "ZK-HAO": {
-   "base": "Christchurch",
+   "base": "Fox",
    "checks": []
   },
   "ZK-HAP": {
-   "base": "Christchurch",
+   "base": "Fox",
    "checks": []
   },
   "ZK-HAQ": {
-   "base": "Christchurch",
+   "base": "Fox",
    "checks": []
   },
   "ZK-HAR": {
-   "base": "Christchurch",
+   "base": "Fox",
    "checks": []
   },
   "ZK-HAS": {
-   "base": "Wellington",
+   "base": "Franz Josef",
    "checks": []
   },
   "ZK-HAT": {
-   "base": "Wellington",
+   "base": "Franz Josef",
    "checks": []
   },
   "ZK-HAU": {
-   "base": "Wellington",
+   "base": "Franz Josef",
    "checks": []
   },
   "ZK-HAV": {
-   "base": "Wellington",
+   "base": "Franz Josef",
    "checks": []
   },
   "ZK-HAW": {
-   "base": "Wellington",
+   "base": "Franz Josef",
    "checks": []
   },
   "ZK-HAX": {
-   "base": "Wellington",
+   "base": "Franz Josef",
    "checks": []
   }
  }
