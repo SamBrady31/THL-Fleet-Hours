@@ -43,7 +43,8 @@ button.cardbtn{background:none;border:0;padding:0;display:block}
 .note{font-size:12px;color:var(--amb)}
 .meta{font-size:12px;color:var(--muted);padding:6px 0 2px}
 .acft{margin-bottom:14px}.acft h2{font-size:16px;font-weight:500;margin:0 0 2px}
-button:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+a.photo{display:inline-block;font-size:14px;color:var(--text);background:var(--card);border:0.5px solid var(--line);border-radius:8px;padding:8px 14px;min-height:40px;line-height:24px;text-decoration:none}
+button:focus-visible,a.photo:focus-visible{outline:2px solid var(--text);outline-offset:2px}
 .foot{margin-top:16px}
 </style>
 </head>
@@ -86,7 +87,7 @@ function sample(){
       {name:"100 hr inspection",hours:Math.round((h+r()*100)*10)/10},
       {name:"Review of airworthiness",date:iso(Math.floor(r()*120))}]};
   }
-  return {hours:{updated:new Date().toISOString(),aircraft:hours},air:{thresholds:{red:5,amber:20,redDays:7,amberDays:30},aircraft:air}};
+  return {hours:{updated:new Date().toISOString(),aircraft:hours},air:{thresholds:{red:5,amber:20,redDays:7,amberDays:30,hoursPerDay:3},aircraft:air}};
 }
 
 function load(){
@@ -97,16 +98,17 @@ function load(){
   .then(render);
 }
 
-// One check: hours remaining and/or days remaining. Whichever is tighter drives the colour and sort order.
-function scoreCheck(c,h,T){
+// One check: hours remaining and/or days remaining. Colour uses the red/amber limits.
+// Sort order uses "estimated days until due": hours are converted to days at the aircraft's flying rate (hrs/day).
+function scoreCheck(c,h,T,rate){
   var hr=isNum(c.hours)&&isNum(h)?c.hours-h:null;
   var dy=typeof c.date==="string"&&c.date?daysUntil(c.date):null;
-  var sh=hr===null?null:hr/T.amber,sd=dy===null?null:dy/T.amberDays;
-  var score=sh===null?sd:sd===null?sh:Math.min(sh,sd);
+  var eh=hr===null?null:hr/rate;
+  var score=eh===null?dy:dy===null?eh:Math.min(eh,dy);
   var lvl="grn";
   if((hr!==null&&hr<=T.red)||(dy!==null&&dy<=T.redDays))lvl="red";
   else if((hr!==null&&hr<=T.amber)||(dy!==null&&dy<=T.amberDays))lvl="amb";
-  var byHours=sh!==null&&(sd===null||sh<=sd);
+  var byHours=eh!==null&&(dy===null||eh<=dy);
   return {c:c,hr:hr,dy:dy,score:score,lvl:lvl,byHours:byHours};
 }
 function mainText(k){
@@ -123,7 +125,8 @@ function compute(base){
   Object.keys(state.air.aircraft).forEach(function(tail){
     var a=state.air.aircraft[tail];if(a.base!==base)return;
     var h=state.hours.aircraft[tail];
-    var ks=(a.checks||[]).map(function(c){return scoreCheck(c,h,T);});
+    var rate=a.hoursPerDay>0?a.hoursPerDay:T.hoursPerDay;
+    var ks=(a.checks||[]).map(function(c){return scoreCheck(c,h,T,rate);});
     ks.sort(function(x,y){return (x.score===null?1e9:x.score)-(y.score===null?1e9:y.score);});
     var next=ks.length&&ks[0].score!==null?ks[0]:null;
     out.push({tail:tail,a:a,h:h,checks:ks,next:next});
@@ -149,7 +152,12 @@ function meta(a){
   var p=[];if(a.a.type)p.push(a.a.type);if(a.a.sheet)p.push("tech log sheet "+a.a.sheet);if(a.a.raised)p.push("raised "+fmtDate(a.a.raised));
   return p.length?'<div class="meta">'+esc(p.join(" · "))+'</div>':'';
 }
-function panel(a){return '<div class="panel">'+meta(a)+checkRows(a)+'</div>';}
+function photoLink(a){
+  if(!a.a.photo)return '';
+  var d=a.a.photoDate?' <span class="small">(photo from '+esc(fmtDate(a.a.photoDate))+')</span>':'';
+  return '<div style="padding:6px 0 4px"><a class="photo" href="'+esc(a.a.photo)+'" target="_blank" rel="noopener">View tech log photo</a>'+d+'</div>';
+}
+function panel(a){return '<div class="panel">'+meta(a)+photoLink(a)+checkRows(a)+'</div>';}
 
 function vList(d){
   return d.list.map(function(a){
@@ -192,7 +200,7 @@ function render(){
 
   var d=compute(state.base);
   document.getElementById("view").innerHTML=state.view==="cards"?vCards(d):state.view==="detail"?vDetail(d):vList(d);
-  document.getElementById("foot").textContent="Hours or days remaining until each check, whichever comes first. Red: "+d.T.red+" hrs or "+d.T.redDays+" days or less. Amber: "+d.T.amber+" hrs or "+d.T.amberDays+" days or less. Confirm against official maintenance records.";
+  document.getElementById("foot").textContent="Hours or days remaining until each check, whichever comes first. Red: "+d.T.red+" hrs or "+d.T.redDays+" days or less. Amber: "+d.T.amber+" hrs or "+d.T.amberDays+" days or less. Listed in the order they are likely to fall due, assuming "+d.T.hoursPerDay+" flying hrs a day. Confirm against official maintenance records.";
 }
 
 document.addEventListener("click",function(e){
