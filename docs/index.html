@@ -69,6 +69,12 @@ button.row,button.cardbtn{width:100%;font:inherit;color:inherit;text-align:left;
 .panel{background:var(--bg);border:0.5px solid var(--line);border-left:3px solid var(--muted);border-radius:8px;padding:4px 12px 8px;margin:0 20px 16px 28px}
 .card .panel{background:none;border:0;border-top:0.5px solid var(--line);border-radius:0;padding:4px 0 0;margin:10px 0 0}
 .card.wide{grid-column:1/-1}
+.pill{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:88px;padding:5px 10px;border-radius:8px;line-height:1.15;white-space:nowrap;flex:none}
+.pill .pn{font-size:20px;font-weight:500}
+.pill .pl{font-size:11px;opacity:.85}
+.p-red{background:var(--redbg);color:var(--redtx)}
+.p-amb{background:var(--ambbg);color:var(--ambtx)}
+.p-grn{background:var(--grnbg);color:var(--grntx)}
 .d-none{background:var(--muted)}
 .cardbtn .dot{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:baseline}
 .card.l-red{background:var(--redbg);border-color:var(--red);color:var(--redtx)}
@@ -188,6 +194,16 @@ function otherText(k){
   return "";
 }
 
+function listPill(k){
+  var num,lab;
+  if(k.byHours){
+    if(k.hr<0){num=f(-k.hr);lab="hours over";}else{num=f(k.hr);lab="hours to run";}
+  }else if(k.dy<0){num=String(-k.dy);lab=k.dy===-1?"day over":"days over";
+  }else if(k.dy===0){num="Today";lab="due";
+  }else{num=String(k.dy);lab=k.dy===1?"day to run":"days to run";}
+  return '<span class="pill p-'+k.lvl+'"><span class="pn">'+esc(num)+'</span><span class="pl">'+lab+'</span></span>';
+}
+
 function compute(base){
   var T=Object.assign({red:5,amber:20,redDays:7,amberDays:30},state.air.thresholds||{}),out=[];
   Object.keys(state.air.aircraft).forEach(function(tail){
@@ -232,8 +248,8 @@ function vList(d){
     var open=!!state.open[a.tail],n=a.next;
     var dot=n?'d-'+n.lvl:'" style="background:var(--muted)',
         sub=n?esc(n.c.name):'No checks entered',
-        big=n?esc(mainText(n)):'';
-    return '<div><button class="row'+(open?' open':'')+'" data-tail="'+esc(a.tail)+'" aria-expanded="'+open+'"><span class="dot '+dot+'"></span><span class="grow"><span class="tail">'+esc(a.tail)+'</span>'+th(a)+'<div class="small">'+sub+'</div></span><span class="big">'+big+'</span></button>'+(open?panel(a):'')+'</div>';
+        pill=n?listPill(n):'';
+    return '<div><button class="row'+(open?' open':'')+'" data-tail="'+esc(a.tail)+'" aria-expanded="'+open+'"><span class="dot '+dot+'"></span><span class="grow"><span class="tail">'+esc(a.tail)+'</span>'+th(a)+'<div class="small">'+sub+'</div></span>'+pill+'</button>'+(open?panel(a):'')+'</div>';
   }).join("");
 }
 
