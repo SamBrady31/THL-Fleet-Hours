@@ -13,13 +13,31 @@
 
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
-main{max-width:720px;margin:0 auto}
+.layout{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+.layout>main{grid-column:2;grid-row:1;min-width:0}
+.notes{grid-column:1;grid-row:1;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;background:var(--card);border:0.5px solid var(--line);border-radius:12px;padding:12px}
+.notes h2{font-size:16px;font-weight:500;margin:0 0 8px}
+.notes label{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
+.notes input,.notes textarea{width:100%;font:inherit;font-size:16px;color:var(--text);background:var(--bg);border:0.5px solid var(--line);border-radius:8px;padding:8px 10px}
+.notes textarea{resize:vertical;min-height:84px}
+.notes input:focus-visible,.notes textarea:focus-visible{outline:2px solid var(--text);outline-offset:1px}
+#nSave{font:inherit;font-size:14px;color:var(--bg);background:var(--text);border:0;border-radius:8px;padding:8px 14px;min-height:40px;cursor:pointer;margin-top:10px}
+#nSave:disabled{opacity:.5;cursor:default}
+.notes .banner{margin:0 0 8px;font-size:12px}
+.nitem{padding:10px 0;border-top:0.5px solid var(--line)}
+.nitem .who{font-size:14px;font-weight:500}
+.nitem .txt{font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:2px}
+#nList{margin-top:12px}
+@media (max-width:859px){.layout{grid-template-columns:1fr}.layout>main,.notes{grid-column:1}.notes{grid-row:2;position:static;max-height:none}}
 h1{font-size:20px;font-weight:500;margin:0}
 .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
 .sub{font-size:13px;color:var(--muted)}
 .seg{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 0}
 .seg button{font:inherit;font-size:14px;color:var(--text);background:var(--card);border:0.5px solid var(--line);border-radius:8px;padding:8px 14px;min-height:40px;cursor:pointer}
 .seg button.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.bar{display:flex;justify-content:space-between;align-items:flex-start;gap:8px 16px;flex-wrap:wrap;margin:12px 0 0}
+.bar .seg{margin:0}
+#bases{margin-left:auto;justify-content:flex-end}
 .banner{margin:12px 0 0;padding:10px 12px;border-radius:8px;font-size:14px}
 .red{background:var(--redbg);color:var(--redtx)}.amb{background:var(--ambbg);color:var(--ambtx)}.grn{background:var(--grnbg);color:var(--grntx)}
 #view{margin-top:16px}
@@ -38,6 +56,13 @@ button.row,button.cardbtn{width:100%;font:inherit;color:inherit;text-align:left;
 .panel{background:var(--bg);border:0.5px solid var(--line);border-left:3px solid var(--muted);border-radius:8px;padding:4px 12px 8px;margin:0 20px 16px 28px}
 .card .panel{background:none;border:0;border-top:0.5px solid var(--line);border-radius:0;padding:4px 0 0;margin:10px 0 0}
 .card.wide{grid-column:1/-1}
+.d-none{background:var(--muted)}
+.cardbtn .dot{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:baseline}
+.card.l-red{background:var(--redbg);border-color:var(--red);color:var(--redtx)}
+.card.l-amb{background:var(--ambbg);border-color:var(--amb);color:var(--ambtx)}
+.card.l-grn{background:var(--grnbg);border-color:var(--grn);color:var(--grntx)}
+.card[class*="l-"] .cardbtn .small{color:inherit;opacity:.85}
+.card[class*="l-"] .panel{color:var(--text);border-top-color:var(--line)}
 button.cardbtn{background:none;border:0;padding:0;display:block}
 .chk{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:0.5px solid var(--line)}
 .chk:first-of-type{border-top:0}
@@ -54,11 +79,14 @@ button:focus-visible,a.photo:focus-visible{outline:2px solid var(--text);outline
 </style>
 </head>
 <body>
+<div class="layout">
 <main>
   <div class="top"><h1 id="title">Fleet maintenance hours</h1><div class="sub" style="display:flex;align-items:center;gap:10px"><span id="updated"></span><button id="theme" class="themebtn" aria-label="Colour theme"></button></div></div>
   <div id="banners"></div>
-  <div class="seg" id="bases" aria-label="Base"></div>
-  <div class="seg" id="views" aria-label="View"></div>
+  <div class="bar">
+    <div class="seg" id="views" aria-label="View"></div>
+    <div class="seg" id="bases" aria-label="Base"></div>
+  </div>
   <div id="view"></div>
   <p class="small foot" id="foot"></p>
   <details class="foot">
@@ -66,6 +94,18 @@ button:focus-visible,a.photo:focus-visible{outline:2px solid var(--text);outline
     <div id="histlist" class="small" style="max-height:240px;overflow:auto;margin-top:6px"></div>
   </details>
 </main>
+<aside class="notes" aria-label="Notes">
+  <h2>Notes</h2>
+  <div id="nBanner"></div>
+  <label for="nName">Your name</label>
+  <input id="nName" maxlength="60" autocomplete="name">
+  <label for="nText">Note</label>
+  <textarea id="nText" maxlength="1000" placeholder="e.g. ZK-IBV hours don’t match the tech log sheet"></textarea>
+  <button id="nSave" type="button">Add note</button>
+  <div class="small" id="nMsg" style="margin-top:6px"></div>
+  <div id="nList"></div>
+</aside>
+</div>
 <script>
 var VIEWS=[["list","List"],["cards","Cards"],["detail","All checks"]];
 var state={hours:null,air:null,demo:false,base:null,view:"list",open:{}};
@@ -186,7 +226,8 @@ function vList(d){
 function vCards(d){
   return '<div class="grid">'+d.list.map(function(a){
     var open=!!state.open[a.tail],n=a.next;
-    return '<div class="card'+(open?' wide':'')+'"><button class="cardbtn" data-tail="'+esc(a.tail)+'" aria-expanded="'+open+'"><div class="small">'+esc(a.tail)+th(a)+'</div><div class="num">'+(n?esc(mainText(n)):'No data')+'</div><div class="small">'+(n?esc(n.c.name):'No checks entered')+'</div></button>'+(open?panel(a):'')+'</div>';
+    var lvl=n?n.lvl:"none";
+    return '<div class="card l-'+lvl+(open?' wide':'')+'"><button class="cardbtn" data-tail="'+esc(a.tail)+'" aria-expanded="'+open+'"><div class="small"><span class="dot d-'+lvl+'"></span>'+esc(a.tail)+th(a)+'</div><div class="num">'+(n?esc(mainText(n)):'No data')+'</div><div class="small">'+(n?esc(n.c.name):'No checks entered')+'</div></button>'+(open?panel(a):'')+'</div>';
   }).join("")+'</div>';
 }
 
@@ -233,7 +274,51 @@ function loadHistory(){
     document.getElementById("histlist").innerHTML=rows||"No updates recorded yet.";
   }).catch(function(){document.getElementById("histlist").textContent="No update history yet.";});
 }
-applyTheme();load();loadHistory();setInterval(load,600000);
+// ---------- Notes ----------
+// Paste your Google Apps Script web app link between the quotes to share notes between everyone.
+// While it is empty, notes are saved on this device only.
+var NOTES_URL="";
+var notes=[];
+function localNotes(){try{return JSON.parse(localStorage.getItem("notes")||"[]");}catch(e){return [];}}
+function fmtNoteTime(iso){
+  var d=new Date(iso);if(isNaN(d.getTime()))return "";
+  return d.toLocaleString("en-NZ",{timeZone:"Pacific/Auckland",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+}
+function renderNotes(){
+  document.getElementById("nBanner").innerHTML=NOTES_URL?"":'<div class="banner amb">Notes are saved on this device only. Shared notes aren’t set up yet.</div>';
+  document.getElementById("nList").innerHTML=notes.length?notes.slice(0,50).map(function(n){
+    return '<div class="nitem"><div class="who">'+esc(n.name)+' <span class="small" style="font-weight:400">· '+esc(fmtNoteTime(n.time))+'</span></div><div class="txt">'+esc(n.text)+'</div></div>';
+  }).join(""):'<div class="small">No notes yet.</div>';
+}
+function loadNotes(){
+  if(!NOTES_URL){notes=localNotes();renderNotes();return;}
+  fetch(NOTES_URL+(NOTES_URL.indexOf("?")<0?"?":"&")+"t="+Date.now())
+    .then(function(r){if(!r.ok)throw 0;return r.json();})
+    .then(function(n){notes=Array.isArray(n)?n:[];renderNotes();})
+    .catch(function(){renderNotes();document.getElementById("nMsg").textContent="Couldn’t load the shared notes.";});
+}
+function saveNote(){
+  var nameEl=document.getElementById("nName"),textEl=document.getElementById("nText"),btn=document.getElementById("nSave"),msg=document.getElementById("nMsg");
+  var name=nameEl.value.trim(),text=textEl.value.trim();
+  if(!name||!text){msg.textContent="Please add your name and a note.";return;}
+  store("noteName",name);
+  msg.textContent="";
+  if(!NOTES_URL){
+    var all=localNotes();all.unshift({time:new Date().toISOString(),name:name,text:text});
+    store("notes",JSON.stringify(all.slice(0,200)));
+    textEl.value="";loadNotes();return;
+  }
+  btn.disabled=true;btn.textContent="Saving…";
+  fetch(NOTES_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({name:name,text:text})})
+    .then(function(r){if(!r.ok)throw 0;return r.json();})
+    .then(function(j){if(!j||!j.ok)throw 0;textEl.value="";loadNotes();})
+    .catch(function(){msg.textContent="Couldn’t save the note. Please try again.";})
+    .then(function(){btn.disabled=false;btn.textContent="Add note";});
+}
+document.getElementById("nName").value=store("noteName")||"";
+document.getElementById("nSave").addEventListener("click",saveNote);
+
+applyTheme();load();loadHistory();loadNotes();setInterval(load,600000);setInterval(loadNotes,300000);
 </script>
 </body>
 </html>
