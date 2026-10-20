@@ -39,7 +39,9 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-ap
 }
 @media (max-width:600px){
 .bar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
-#bases{margin-left:0;justify-content:flex-start}
+.grp-r{margin-left:0}
+.grp-r .seg{justify-content:flex-start}
+.grp-r .lbl{flex-direction:row}
 .seg button{flex:1 1 auto;padding:8px 10px;font-size:13px}
 }
 h1{font-size:20px;font-weight:500;margin:0}
@@ -50,7 +52,12 @@ h1{font-size:20px;font-weight:500;margin:0}
 .seg button.on{background:var(--text);color:var(--bg);border-color:var(--text)}
 .bar{display:flex;justify-content:space-between;align-items:flex-start;gap:8px 16px;flex-wrap:wrap;margin:12px 0 0}
 .bar .seg{margin:0}
-#bases{margin-left:auto;justify-content:flex-end}
+.grp{min-width:0}
+.grp-r{margin-left:auto}
+.grp-r .seg{justify-content:flex-end}
+.lbl{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);opacity:.7;margin:0 0 5px}
+.lbl::after{content:"";flex:1;height:0;border-top:0.5px solid var(--line)}
+.grp-r .lbl{flex-direction:row-reverse}
 .banner{margin:12px 0 0;padding:10px 12px;border-radius:8px;font-size:14px}
 .red{background:var(--redbg);color:var(--redtx)}.amb{background:var(--ambbg);color:var(--ambtx)}.grn{background:var(--grnbg);color:var(--grntx)}
 #view{margin-top:16px}
@@ -103,8 +110,8 @@ button:focus-visible,a.photo:focus-visible{outline:2px solid var(--text);outline
   <div class="top"><h1 id="title">Fleet maintenance hours</h1><div class="sub" style="display:flex;align-items:center;gap:10px"><span id="updated"></span><button id="theme" class="themebtn" aria-label="Colour theme"></button></div></div>
   <div id="banners"></div>
   <div class="bar">
-    <div class="seg" id="views" aria-label="View"></div>
-    <div class="seg" id="bases" aria-label="Base"></div>
+    <div class="grp"><div class="lbl">View</div><div class="seg" id="views" aria-label="View"></div></div>
+    <div class="grp grp-r"><div class="lbl">Base</div><div class="seg" id="bases" aria-label="Base"></div></div>
   </div>
   <div id="view"></div>
   <p class="small foot" id="foot"></p>
@@ -161,7 +168,7 @@ function sample(){
       {name:"100 hr inspection",hours:Math.round((h+r()*100)*10)/10},
       {name:"Review of airworthiness",date:iso(Math.floor(r()*120))}]};
   }
-  return {hours:{updated:new Date().toISOString(),aircraft:hours},air:{thresholds:{red:5,amber:20,redDays:7,amberDays:30,hoursPerDay:3},aircraft:air}};
+  return {hours:{updated:new Date().toISOString(),aircraft:hours},air:{thresholds:{red:5,amber:20,redDays:7,amberDays:30,hoursPerDay:1},aircraft:air}};
 }
 
 function load(){
@@ -218,7 +225,7 @@ function listPill(k){
 }
 
 function compute(base){
-  var T=Object.assign({red:5,amber:20,redDays:7,amberDays:30},state.air.thresholds||{}),out=[];
+  var T=Object.assign({red:5,amber:20,redDays:7,amberDays:30,hoursPerDay:1},state.air.thresholds||{}),out=[];
   Object.keys(state.air.aircraft).forEach(function(tail){
     var a=state.air.aircraft[tail];if(a.base!==base)return;
     var h=state.hours.aircraft[tail];
