@@ -76,6 +76,12 @@ button.row,button.cardbtn{width:100%;font:inherit;color:inherit;text-align:left;
 .panel{background:var(--bg);border:0.5px solid var(--line);border-left:3px solid var(--muted);border-radius:8px;padding:4px 12px 8px;margin:0 20px 16px 28px}
 .card .panel{background:none;border:0;border-top:0.5px solid var(--line);border-radius:0;padding:4px 0 0;margin:10px 0 0}
 .card.wide{grid-column:1/-1}
+.status{margin:10px 0 0;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.status .dot{width:8px;height:8px}
+.banner.strong{font-size:15px;padding:12px 14px;border-left:4px solid}
+.banner.amb.strong{border-left-color:var(--amb)}
+.banner.red.strong{border-left-color:var(--red)}
+.stale .pill.est{outline:1.5px dashed currentColor;outline-offset:-3px;opacity:.8}
 .lnk{font:inherit;font-size:12px;color:var(--muted);background:none;border:0.5px solid var(--line);border-radius:6px;padding:3px 10px;min-height:28px;cursor:pointer;margin:6px 6px 0 0}
 .lnk:hover{color:var(--text)}
 .lnk.strong{color:var(--bg);background:var(--text);border-color:var(--text)}
@@ -143,6 +149,9 @@ button:focus-visible,a.photo:focus-visible{outline:2px solid var(--text);outline
 </div>
 <script>
 var ALL="__all";
+var UPDATE_HOUR_NZ=6; // the hour (NZ time) the nightly update normally finishes. Used in the "not updated yet" message.
+function nzHour(){return parseInt(new Date().toLocaleString("en-GB",{timeZone:"Pacific/Auckland",hour:"2-digit",hour12:false}),10)%24;}
+function hourText(h){return (h%12||12)+(h<12?" am":" pm");}
 var VIEWS=[["list","List"],["cards","Cards"],["detail","All checks"]];
 var state={hours:null,air:null,demo:false,base:null,view:"list",open:{},done:{},confirm:null};
 
@@ -231,7 +240,7 @@ function listPill(k){
   }else if(k.dy<0){num=String(-k.dy);lab=k.dy===-1?"day over":"days over";
   }else if(k.dy===0){num="Today";lab="due";
   }else{num=String(k.dy);lab=k.dy===1?"day to run":"days to run";}
-  return '<span class="pill p-'+k.lvl+'"><span class="pn">'+esc(num)+'</span><span class="pl">'+lab+'</span></span>';
+  return '<span class="pill p-'+k.lvl+(k.byHours?' est':'')+'"><span class="pn">'+esc(num)+'</span><span class="pl">'+lab+'</span></span>';
 }
 
 function compute(base){
@@ -336,7 +345,21 @@ function render(){
   var up=new Date(state.hours.updated),age=(Date.now()-up.getTime())/36e5,ban="";
   document.getElementById("updated").textContent="Updated "+up.toLocaleString("en-NZ",{timeZone:"Pacific/Auckland",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
   if(state.demo)ban+='<div class="banner amb">Showing sample data. Couldn’t load the live hours.</div>';
-  else if(age>30)ban+='<div class="banner red">These hours are more than a day old. Check the nightly update before relying on them.</div>';
+  else{
+    var whenFull=up.toLocaleString("en-NZ",{timeZone:"Pacific/Auckland",weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+    var behind=-daysUntil(up.toLocaleDateString("en-CA",{timeZone:"Pacific/Auckland"}));
+    if(behind>=2){
+      ban+='<div class="banner red strong"><b>Out of date.</b> The hours were last updated '+esc(whenFull)+' ('+behind+' days ago). Don’t rely on them. Check Aeronet directly.</div>';
+    }else if(behind===1){
+      var late=nzHour()>UPDATE_HOUR_NZ;
+      ban+='<div class="banner amb strong"><b>Not updated yet today.</b> These are yesterday’s numbers (last updated '+esc(whenFull)+') and don’t include yesterday’s flying, so aircraft may be closer to their checks than shown. '+(late?'Today’s update is late, so check Aeronet directly.':'Today’s update is due around '+hourText(UPDATE_HOUR_NZ)+'.')+'</div>';
+    }else{
+      ban+='<div class="status"><span class="dot d-grn"></span>Up to date · updated today '+esc(up.toLocaleTimeString("en-NZ",{timeZone:"Pacific/Auckland",hour:"numeric",minute:"2-digit"}))+'</div>';
+    }
+    state.stale=behind>=1;
+  }
+  if(state.demo)state.stale=false;
+  document.body.classList.toggle("stale",!!state.stale);
   document.getElementById("banners").innerHTML=ban;
 
   var fn=state.view==="cards"?vCards:state.view==="detail"?vDetail:vList,d,html="";
