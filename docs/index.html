@@ -76,6 +76,15 @@ button.row,button.cardbtn{width:100%;font:inherit;color:inherit;text-align:left;
 .panel{background:var(--bg);border:0.5px solid var(--line);border-left:3px solid var(--muted);border-radius:8px;padding:4px 12px 8px;margin:0 20px 16px 28px}
 .card .panel{background:none;border:0;border-top:0.5px solid var(--line);border-radius:0;padding:4px 0 0;margin:10px 0 0}
 .card.wide{grid-column:1/-1}
+.lnk{font:inherit;font-size:12px;color:var(--muted);background:none;border:0.5px solid var(--line);border-radius:6px;padding:3px 10px;min-height:28px;cursor:pointer;margin:6px 6px 0 0}
+.lnk:hover{color:var(--text)}
+.lnk.strong{color:var(--bg);background:var(--text);border-color:var(--text)}
+.lnk:disabled{opacity:.5;cursor:default}
+.cf{margin-top:6px;padding:8px;border:0.5px solid var(--line);border-radius:8px;background:var(--card)}
+.cf input{font:inherit;font-size:16px;color:var(--text);background:transparent;border:0.5px solid var(--line);border-radius:6px;padding:5px 8px;width:100%;margin-bottom:6px}
+.cfrow{display:flex;gap:6px}.cfrow input{min-width:0}
+.cfmsg{color:var(--red);margin-top:4px}
+.chk.isdone .nm{text-decoration:line-through;opacity:.6}
 .pill{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:88px;padding:5px 10px;border-radius:8px;line-height:1.15;white-space:nowrap;flex:none}
 .pill .pn{font-size:20px;font-weight:500}
 .pill .pl{font-size:11px;opacity:.85}
@@ -135,11 +144,12 @@ button:focus-visible,a.photo:focus-visible{outline:2px solid var(--text);outline
 <script>
 var ALL="__all";
 var VIEWS=[["list","List"],["cards","Cards"],["detail","All checks"]];
-var state={hours:null,air:null,demo:false,base:null,view:"list",open:{}};
+var state={hours:null,air:null,demo:false,base:null,view:"list",open:{},done:{},confirm:null};
 
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function f(v){return v.toFixed(1);}
+function ckey(tail,c){return tail+"|"+c.name+"|"+(isNum(c.hours)?c.hours:"")+"|"+(c.date||"");}
 function isNum(v){return typeof v==="number"&&isFinite(v);}
 function todayNZ(){return new Date().toLocaleDateString("en-CA",{timeZone:"Pacific/Auckland"});}
 function daysUntil(iso){return Math.round((Date.parse(iso+"T00:00:00Z")-Date.parse(todayNZ()+"T00:00:00Z"))/864e5);}
@@ -181,7 +191,7 @@ function load(){
 
 // One check: hours remaining and/or days remaining. Colour uses the red/amber limits.
 // Sort order uses "estimated days until due": hours are converted to days at the aircraft's flying rate (hrs/day).
-function rank(l){return l==="red"?0:l==="amb"?1:2;}
+function rank(l){return l==="red"?0:l==="amb"?1:l==="done"?3:2;}
 function scoreCheck(c,h,T,rate){
   var hr=isNum(c.hours)&&isNum(h)?c.hours-h:null;
   var dy=typeof c.date==="string"&&c.date?daysUntil(c.date):null;
@@ -230,7 +240,17 @@ function compute(base){
     var a=state.air.aircraft[tail];if(a.base!==base)return;
     var h=state.hours.aircraft[tail];
     var rate=a.hoursPerDay>0?a.hoursPerDay:T.hoursPerDay;
-    var ks=(a.checks||[]).map(function(c){return scoreCheck(c,h,T,rate);});
+    var ks=(a.checks||[]).map(function(c){
+      var key=ckey(tail,c),dn=state.done[key]||null,k;
+      if(dn&&(isNum(dn.newHours)||dn.newDate)){
+        // completed, and the new due times were entered: track the new cycle
+        var c2=Object.assign({},c,{hours:isNum(dn.newHours)?dn.newHours:undefined,date:dn.newDate||undefined,from:undefined,note:undefined});
+        k=scoreCheck(c2,h,T,rate);
+      }else if(dn){
+        k={c:c,hr:null,dy:null,score:null,lvl:"done",byHours:false};
+      }else k=scoreCheck(c,h,T,rate);
+      k.key=key;k.done=dn;return k;
+    });
     ks.sort(byUrgency);
     var next=ks.length&&ks[0].score!==null?ks[0]:null;
     out.push({tail:tail,a:a,h:h,checks:ks,next:next});
@@ -244,15 +264,27 @@ function compute(base){
 
 function th(a){return isNum(a.h)?' <span class="small" style="font-weight:400">('+f(a.h)+')</span>':'';}
 
+function confirmForm(key){
+  return '<div class="cf"><div class="small" style="margin-bottom:6px">Mark this check as done?</div>'
+   +'<input class="cfn" placeholder="Your name" maxlength="60" autocomplete="name" value="'+esc(store("noteName")||"")+'">'
+   +'<div class="small" style="margin-bottom:4px">Optional: new due times from the new tech log sheet</div>'
+   +'<div class="cfrow"><input class="cfh" inputmode="decimal" placeholder="New due hours"><input class="cfd" type="date" aria-label="New due date"></div>'
+   +'<div><button class="lnk strong" data-act="confirm" data-ck="'+esc(key)+'">Confirm done</button><button class="lnk" data-act="cancel">Cancel</button></div>'
+   +'<div class="small cfmsg"></div></div>';
+}
 function checkRows(a){
   if(!a.checks.length)return '<div class="small" style="padding:8px 0">No checks entered yet.</div>';
   return a.checks.map(function(k){
-    var c=k.c,sub=[];
+    var c=k.c,sub=[],isDone=k.lvl==="done",dn=k.done,extra="";
     if(isNum(c.from))sub.push("window opens at "+c.from.toFixed(2));
-    if(isNum(c.hours))sub.push("due at "+c.hours.toFixed(2)+" hrs");
-    if(c.date)sub.push("due "+fmtDate(c.date));
-    var o=otherText(k);
-    return '<div class="chk"><span class="dot d-'+k.lvl+'"></span><span class="grow"><div class="nm">'+esc(c.name)+'</div><div class="small">'+esc(sub.join(" · "))+'</div>'+(c.note?'<div class="note">'+esc(c.note)+'</div>':'')+'</span><span><div class="val">'+esc(mainText(k))+'</div>'+(o?'<div class="small" style="text-align:right">'+esc(o)+'</div>':'')+'</span></div>';
+    if(isNum(c.hours))sub.push((isDone?"was due at ":"due at ")+c.hours.toFixed(2)+" hrs");
+    if(c.date)sub.push((isDone?"was due ":"due ")+fmtDate(c.date));
+    var o=isDone?"":otherText(k);
+    if(dn){
+      extra='<div class="small">Completed by '+esc(dn.name||"unknown")+' · '+esc(fmtNoteTime(dn.time))+(isNum(dn.hoursAt)?' · aircraft at '+f(dn.hoursAt)+' hrs':'')+(isDone?' · waiting for new due times':' · new due times entered')+'</div><button class="lnk" data-act="undo" data-ck="'+esc(k.key)+'">Undo</button>';
+    }else if(state.confirm===k.key){extra=confirmForm(k.key);}
+    else{extra='<button class="lnk" data-act="ask" data-ck="'+esc(k.key)+'">Mark done</button>';}
+    return '<div class="chk'+(isDone?' isdone':'')+'"><span class="dot d-'+(isDone?'none':k.lvl)+'"></span><span class="grow"><div class="nm">'+esc(c.name)+'</div><div class="small">'+esc(sub.join(" · "))+'</div>'+(c.note?'<div class="note">'+esc(c.note)+'</div>':'')+extra+'</span><span><div class="val">'+esc(isDone?"Done":mainText(k))+'</div>'+(o?'<div class="small" style="text-align:right">'+esc(o)+'</div>':'')+'</span></div>';
   }).join("");
 }
 function meta(a){
@@ -270,7 +302,7 @@ function vList(d){
   return d.list.map(function(a){
     var open=!!state.open[a.tail],n=a.next;
     var dot=n?'d-'+n.lvl:'" style="background:var(--muted)',
-        sub=n?esc(n.c.name):'No checks entered',
+        sub=n?esc(n.c.name):(a.checks.length?'Waiting for new due times':'No checks entered'),
         pill=n?listPill(n):'';
     return '<div><button class="row'+(open?' open':'')+'" data-tail="'+esc(a.tail)+'" aria-expanded="'+open+'"><span class="dot '+dot+'"></span><span class="grow"><span class="tail">'+esc(a.tail)+'</span>'+th(a)+'<div class="small">'+sub+'</div></span>'+pill+'</button>'+(open?panel(a):'')+'</div>';
   }).join("");
@@ -280,7 +312,7 @@ function vCards(d){
   return '<div class="grid">'+d.list.map(function(a){
     var open=!!state.open[a.tail],n=a.next;
     var lvl=n?n.lvl:"none";
-    return '<div class="card l-'+lvl+(open?' wide':'')+'"><button class="cardbtn" data-tail="'+esc(a.tail)+'" aria-expanded="'+open+'"><div class="small"><span class="dot d-'+lvl+'"></span>'+esc(a.tail)+th(a)+'</div><div class="num">'+(n?esc(mainText(n)):'No data')+'</div><div class="small">'+(n?esc(n.c.name):'No checks entered')+'</div></button>'+(open?panel(a):'')+'</div>';
+    return '<div class="card l-'+lvl+(open?' wide':'')+'"><button class="cardbtn" data-tail="'+esc(a.tail)+'" aria-expanded="'+open+'"><div class="small"><span class="dot d-'+lvl+'"></span>'+esc(a.tail)+th(a)+'</div><div class="num">'+(n?esc(mainText(n)):'No data')+'</div><div class="small">'+(n?esc(n.c.name):(a.checks.length?'Waiting for new due times':'No checks entered'))+'</div></button>'+(open?panel(a):'')+'</div>';
   }).join("")+'</div>';
 }
 
@@ -291,6 +323,7 @@ function vDetail(d){
 }
 
 function render(){
+  if(!state.hours||!state.air)return;
   var bases=[];
   Object.keys(state.air.aircraft).forEach(function(t){var b=state.air.aircraft[t].base;if(bases.indexOf(b)<0)bases.push(b);});
   if(state.base!==ALL&&bases.indexOf(state.base)<0){var sb=store("base");state.base=(sb===ALL||bases.indexOf(sb)>=0)?sb:bases[0];}
@@ -316,6 +349,7 @@ function render(){
 
 document.addEventListener("click",function(e){
   var b=e.target.closest("button");if(!b)return;
+  if(b.dataset.act){doAct(b);return;}
   if(b.id==="theme"){var n=themeNow()==="dark"?"light":"dark";store("theme",n);applyTheme();return;}
   if(b.dataset.base){state.base=b.dataset.base;store("base",state.base);render();}
   if(b.dataset.view){state.view=b.dataset.view;store("view",state.view);render();}
@@ -374,7 +408,64 @@ function saveNote(){
 document.getElementById("nName").value=store("noteName")||"";
 document.getElementById("nSave").addEventListener("click",saveNote);
 
-applyTheme();load();loadHistory();loadNotes();setInterval(load,600000);setInterval(loadNotes,300000);
+// ---------- Completed checks (shared through the same Google Sheet as the notes) ----------
+function ingestDone(list){
+  var d={};
+  (Array.isArray(list)?list:[]).slice().sort(function(x,y){return String(x&&x.time)<String(y&&y.time)?-1:1;}).forEach(function(r){
+    if(!r||typeof r.key!=="string")return;
+    if(r.action==="undo"){delete d[r.key];return;}
+    if(r.action!=="done")return;
+    var nh=parseFloat(r.newHours),ha=parseFloat(r.hoursAt),nd=String(r.newDate||"").slice(0,10);
+    d[r.key]={name:String(r.name||""),time:r.time,hoursAt:isNaN(ha)?null:ha,newHours:isNaN(nh)?null:nh,newDate:/^\d{4}-\d{2}-\d{2}$/.test(nd)?nd:null};
+  });
+  state.done=d;
+}
+function localDone(){try{return JSON.parse(localStorage.getItem("done")||"[]");}catch(e){return [];}}
+function loadDone(){
+  if(!NOTES_URL){ingestDone(localDone());render();return Promise.resolve();}
+  return fetch(NOTES_URL+(NOTES_URL.indexOf("?")<0?"?":"&")+"what=done&t="+Date.now())
+    .then(function(r){if(!r.ok)throw 0;return r.json();})
+    .then(function(l){ingestDone(l);render();})
+    .catch(function(){});
+}
+function sendDone(rec){
+  if(!NOTES_URL){
+    rec.time=new Date().toISOString();
+    var all=localDone();all.push(rec);
+    try{localStorage.setItem("done",JSON.stringify(all.slice(-500)));}catch(e){}
+    return Promise.resolve();
+  }
+  return fetch(NOTES_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(rec)})
+    .then(function(r){if(!r.ok)throw 0;return r.json();})
+    .then(function(j){if(!j||!j.ok)throw 0;});
+}
+function doAct(b){
+  var key=b.dataset.ck||"",act=b.dataset.act,parts=key.split("|"),tail=parts[0],hrs=state.hours.aircraft[tail];
+  if(act==="ask"){state.confirm=key;render();return;}
+  if(act==="cancel"){state.confirm=null;render();return;}
+  if(act==="undo"){
+    b.disabled=true;
+    sendDone({type:"done",action:"undo",key:key,tail:tail,check:parts[1]||"",name:store("noteName")||""})
+      .then(loadDone).catch(function(){b.disabled=false;alert("Couldn’t save. Please try again.");});
+    return;
+  }
+  if(act==="confirm"){
+    var box=b.closest(".cf"),msg=box.querySelector(".cfmsg");
+    var name=box.querySelector(".cfn").value.trim(),raw=box.querySelector(".cfh").value.trim(),nd=box.querySelector(".cfd").value;
+    var nh=raw===""?null:parseFloat(raw);
+    if(!name){msg.textContent="Please add your name.";return;}
+    if(raw!==""&&(isNaN(nh)||(isNum(hrs)&&nh<=hrs))){msg.textContent="New due hours must be higher than the aircraft’s current hours"+(isNum(hrs)?" ("+f(hrs)+").":".");return;}
+    if(nd&&daysUntil(nd)<0){msg.textContent="The new due date can’t be in the past.";return;}
+    store("noteName",name);
+    b.disabled=true;b.textContent="Saving…";
+    sendDone({type:"done",action:"done",key:key,tail:tail,check:parts[1]||"",name:name,hoursAt:isNum(hrs)?hrs:"",newHours:nh===null?"":nh,newDate:nd||""})
+      .then(function(){state.confirm=null;return loadDone();})
+      .catch(function(){b.disabled=false;b.textContent="Confirm done";msg.textContent="Couldn’t save. Please try again.";});
+  }
+}
+
+applyTheme();load();loadHistory();loadNotes();loadDone();
+setInterval(function(){if(!state.confirm){load();loadDone();}},600000);setInterval(loadNotes,300000);
 </script>
 </body>
 </html>
