@@ -2,27 +2,55 @@ name: Nightly Aeronet scrape
 
 on:
   schedule:
-    - cron: "0 13 * * *"   # 13:00 UTC = 1-2am in New Zealand, after Aeronet's midnight update
-  workflow_dispatch: {}    # lets you run it manually from the Actions tab
+    # Four attempts, UTC. Covers roughly 1am-6am NZ in both summer and winter time.
+    # Odd minutes on purpose: GitHub queues run late at :00.
+    - cron: "43 12 * * *"
+    - cron: "43 13 * * *"
+    - cron: "43 14 * * *"
+    - cron: "43 15 * * *"
+  workflow_dispatch: {}    # manual runs always scrape
 
 permissions:
   contents: write
+
+concurrency:
+  group: nightly-scrape
+  cancel-in-progress: false
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Skip if already updated in the last 6 hours
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ -f docs/hours.json ]; then
+            updated=$(jq -r .updated docs/hours.json)
+            age=$(( $(date +%s) - $(date -d "$updated" +%s) ))
+            if [ "$age" -lt 21600 ]; then
+              echo "Fresh data ($age s old), skipping."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
       - uses: actions/setup-python@v5
+        if: steps.check.outputs.skip != 'true'
         with:
           python-version: "3.12"
+
       - run: pip install playwright && playwright install --with-deps chromium
+        if: steps.check.outputs.skip != 'true'
+
       - run: python scrape.py
+        if: steps.check.outputs.skip != 'true'
         env:
           AERONET_LOGIN_URL: ${{ secrets.AERONET_LOGIN_URL }}
           AERONET_FLEET_URL: ${{ secrets.AERONET_FLEET_URL }}
           AERONET_USER: ${{ secrets.AERONET_USER }}
           AERONET_PASS: ${{ secrets.AERONET_PASS }}
+
       - name: Save screenshot if login failed
         if: failure()
         uses: actions/upload-artifact@v4
@@ -31,7 +59,9 @@ jobs:
           path: debug.png
           if-no-files-found: ignore
           retention-days: 1
+
       - name: Commit updated hours
+        if: steps.check.outputs.skip != 'true'
         run: |
           git config user.name "hours-bot"
           git config user.email "hours-bot@users.noreply.github.com"
