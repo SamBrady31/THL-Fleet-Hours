@@ -119,10 +119,12 @@ button.cardbtn{background:none;border:0;padding:0;display:block}
 a.photo{display:inline-block;font-size:14px;color:var(--text);background:var(--card);border:0.5px solid var(--line);border-radius:8px;padding:8px 14px;min-height:40px;line-height:24px;text-decoration:none}
 button:focus-visible,a.photo:focus-visible{outline:2px solid var(--text);outline-offset:2px}
 .foot{margin-top:16px}
+.layout.nonotes{grid-template-columns:minmax(0,1fr);max-width:720px}
+.layout.nonotes>main{grid-column:1}
 </style>
 </head>
 <body>
-<div class="layout">
+<div class="layout nonotes">
 <main>
   <div class="top"><h1 id="title">Fleet maintenance hours</h1><div class="sub" style="display:flex;align-items:center;gap:10px"><span id="updated"></span><button id="theme" class="themebtn" aria-label="Colour theme"></button></div></div>
   <div id="banners"></div>
@@ -137,7 +139,7 @@ button:focus-visible,a.photo:focus-visible{outline:2px solid var(--text);outline
     <div id="histlist" class="small" style="max-height:240px;overflow:auto;margin-top:6px"></div>
   </details>
 </main>
-<aside class="notes" aria-label="Notes">
+<aside class="notes" aria-label="Notes" hidden>
   <h2>Notes</h2>
   <div id="nBanner"></div>
   <label for="nName">Your name</label>
@@ -170,7 +172,7 @@ function fmtD(d){return d<0?(-d)+(d===-1?" day over":" days over"):d===0?"Today"
 
 function themeNow(){
   var t=store("theme");if(t==="light"||t==="dark")return t;
-  return return "dark";
+  return "dark";
 }
 function applyTheme(){
   var t=themeNow();
