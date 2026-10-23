@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fleet maintenance hours</title>
-<script>try{var _t=localStorage.getItem("theme");if(_t!=="light"&&_t!=="dark")_t=window.matchMedia&&matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",_t);}catch(e){}</script>
+<script>try{var _t=localStorage.getItem("theme");if(_t!=="light"&&_t!=="dark")_t="dark";document.documentElement.setAttribute("data-theme",_t);}catch(e){}</script>
 <style>
 :root{--bg:#f7f6f3;--card:#fff;--text:#1f1f1d;--muted:#6b6a66;--line:#e2e0da;--red:#d93a3a;--redbg:#fcebeb;--redtx:#8f1f1f;--amb:#e59a1b;--ambbg:#faeeda;--ambtx:#6b4306;--grn:#3f9a4a;--grnbg:#eaf3de;--grntx:#27500a;color-scheme:light dark}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1a18;--card:#262624;--text:#f1efe8;--muted:#a3a29b;--line:#3a3a37;--redbg:#4a1b1b;--redtx:#f7c1c1;--ambbg:#4a3410;--ambtx:#fac775;--grnbg:#1f3a15;--grntx:#c0dd97}}
@@ -170,7 +170,7 @@ function fmtD(d){return d<0?(-d)+(d===-1?" day over":" days over"):d===0?"Today"
 
 function themeNow(){
   var t=store("theme");if(t==="light"||t==="dark")return t;
-  return window.matchMedia&&matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";
+  return return "dark";
 }
 function applyTheme(){
   var t=themeNow();
